@@ -1,0 +1,22 @@
+{
+  "name": "betterme",
+  "version": "1.0.0",
+  "description": "Web template for BetterMe health and wellness platform",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "live-server src",
+    "build": "echo 'No build step needed - static template'",
+    "test": "echo 'No test framework configured'"
+  },
+  "keywords": ["html", "css", "javascript", "template", "health", "wellness"],
+  "author": "BetterMe",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/betterme.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/betterme/issues"
+  },
+  "homepage": "https://github.com/username/betterme#readme"
+}
