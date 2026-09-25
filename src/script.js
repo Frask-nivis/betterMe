@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const messages = document.getElementById('messages');
     const form = document.getElementById('chatForm');
-    const hint = document.querySelector('.composer-hint');
+    const hint = document.querySelector('.shortcut-hint');
     const currentClass = document.getElementById('currentClass');
     const sidebar = document.getElementById('sidebar');
     const toast = document.getElementById('toast');
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(progressInt, { childList: true, subtree: true });
     }
 
-    let selectedClass = 'Product Design';
+    let selectedClass = 'Contoh Kelas';
 
     const showToast = (message) => {
         toast.textContent = message;
@@ -110,8 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('submit', (event) => {
         event.preventDefault();
-        const text = window.prompt('Tulis pertanyaanmu untuk Glint AI:');
+        const text = form.querySelector('input').value;
         if (text) sendMessage(text);
+        form.reset();
     });
 
     document.querySelectorAll('.quick-actions button').forEach((button) => {
