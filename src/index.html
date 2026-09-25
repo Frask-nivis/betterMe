@@ -1,65 +1,141 @@
 <!DOCTYPE html>
 <html lang="id">
-    <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <meta name="description" content="GoalGlint — ruang belajar cerdas untuk fokus, kelas, dan kemajuanmu.">
-          <title>GoalGlint — Your learning workspace</title>
-      <link rel="stylesheet" href="style.css">
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GoalGlint — ruang belajar cerdas untuk fokus, kelas, dan kemajuanmu.">
+    <title>GoalGlint — Your learning workspace</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
 <body>
-      <div class="app-shell">
-              <aside class="sidebar" id="sidebar">
-                        <div class="sidebar-top">
-                                    <a class="brand" href="#" aria-label="GoalGlint home"><span class="brand-mark">✦</span>span><span>Goal<span>Glint</span></span></a>a>
-                                <button class="icon-button sidebar-close" id="closeSidebar" aria-label="Tutup sidebar">×</button>button>
-                        </div>div>
-                    <button class="new-chat" id="newChat"><span>＋</span> Chat baru <kbd>⌘ K</kbd></button>button>
-                    <nav class="main-nav" aria-label="Navigasi utama">
-                            <a class="nav-item active" href="#chat"><span class="nav-icon">⌂</span> Workspace</a>a>
-                            <a class="nav-item" href="#saved"><span class="nav-icon">▱</span> Tersimpan <span class="nav-count">3</span></a>a>
-                            <a class="nav-item" href="#progress"><span class="nav-icon">◒</span> Progress</a>a>
-                    </nav>nav>
-                    <div class="class-section">
-                            <div class="section-label"><span>KELAS SAYA</span><button class="add-class" id="addClass" aria-label="Tambah kelas">＋</button>button></div>div>
-                            <div class="class-list" id="classList">
-                                      <button class="class-item active" data-class="Product Design"><span class="class-dot coral"></span><span>Product Design</span><span class="class-more">•••</span></button>button>
-                                      <button class="class-item" data-class="Web Development"><span class="class-dot blue"></span><span>Web Development</span><span class="class-more">•••</span></button>button>
-                                      <button class="class-item" data-class="English Speaking"><span class="class-dot green"></span><span>English Speaking</span><span class="class-more">•••</span></button>button>
-                                      <button class="class-item" data-class="Personal Growth"><span class="class-dot violet"></span><span>Personal Growth</span><span class="class-more">•••</span></button>button>
-                            </div>div>
-                    </div>div>
-                    <div class="sidebar-bottom">
-                            <div class="mini-profile"><div class="avatar">T</div>div><div><strong>Taniki</strong><small>Free workspace</small></div><button class="icon-button">•••</button>button></div>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <a class="brand" href="#" aria-label="GoalGlint home">
+                    <span class="brand-mark">✦</span>
+                    <span>Goal<span>Glint</span></span>
+                </a>
+                <button class="icon-button sidebar-close" id="closeSidebar" aria-label="Tutup sidebar">×</button>
+            </div>
+            <button class="new-chat" id="newChat">
+                <span>＋</span> Chat baru <kbd>⌘ K</kbd>
+            </button>
+            <nav class="main-nav" aria-label="Navigasi utama">
+                <a class="nav-item active" href="#chat"><span class="nav-icon">⌂</span> Workspace</a>
+                <a class="nav-item" href="#saved"><span class="nav-icon">▱</span> Tersimpan <span class="nav-count">3</span></a>
+                <a class="nav-item" href="#progress"><span class="nav-icon">◒</span> Progress</a>
+            </nav>
+            <div class="class-section">
+                <div class="section-label">
+                    <span>KELAS SAYA</span>
+                    <button class="add-class" id="addClass" aria-label="Tambah kelas">＋</button>
+                </div>
+                <div class="class-list" id="classList">
+                    <button class="class-item active" data-class="Product Design"><span class="class-dot coral"></span><span>Product Design</span><span class="class-more">•••</span></button>
+                    <button class="class-item" data-class="Web Development"><span class="class-dot blue"></span><span>Web Development</span><span class="class-more">•••</span></button>
+                    <button class="class-item" data-class="English Speaking"><span class="class-dot green"></span><span>English Speaking</span><span class="class-more">•••</span></button>
+                    <button class="class-item" data-class="Personal Growth"><span class="class-dot violet"></span><span>Personal Growth</span><span class="class-more">•••</span></button>
+                </div>
+            </div>
+            <div class="sidebar-bottom">
+                <div class="mini-profile">
+                    <div class="avatar">T</div>
+                    <div><strong>Taniki</strong><small>Free workspace</small></div>
+                    <button class="icon-button">•••</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-panel" id="chat">
+            <header class="topbar">
+                <button class="icon-button menu-button" id="openSidebar" aria-label="Buka sidebar">☰</button>
+                <div class="breadcrumb"><span class="muted">Workspace</span><span>/</span><strong id="currentClass">Product Design</strong></div>
+                <div class="top-actions">
+                    <button class="icon-button" aria-label="Cari">⌕</button>
+                    <button class="icon-button" aria-label="Notifikasi">♢</button>
+                    <button class="avatar small">T</button>
+                </div>
+            </header>
+
+            <section class="content-wrap">
+                <div class="welcome-row">
+                    <div>
+                        <p class="eyebrow">SELAMAT DATANG KEMBALI, TANIKI</p>
+                        <h1>What are we learning<br><em>today?</em></h1>
                     </div>
-              </aside>aside>
-      
-          <main class="main-panel" id="chat">
-                <header class="topbar">
-                        <button class="icon-button menu-button" id="openSidebar" aria-label="Buka sidebar">☰</button>button>
-                        <div class="breadcrumb"><span class="muted">Workspace</span><span>/</span><strong id="currentClass">Product Design</strong></div>
-                        <div class="top-actions"><button class="icon-button" aria-label="Cari">⌕</button>button><button class="icon-button" aria-label="Notifikasi">♢</button>button><button class="avatar small">T</button>button></div>
-                </header>header>
-          
-                <section class="content-wrap">
-                        <div class="welcome-row"><div><p class="eyebrow">SELAMAT DATANG KEMBALI, TANIKI</p>p><h1>What are we learning<br><em>today?</em></h1></div><div class="date-card"><span class="date-icon">◷</span><div><small>Fokus hari ini</small><strong>2 jam 30 menit</strong></div></div></div>
-                        <div class="stats-row"><div class="stat-card"><span class="stat-label">PROGRESS MINGGU INI</span><strong>68%</strong><span class="stat-trend">↗ +12% dari minggu lalu</span><div class="progress-bar"><i style="width:68%"></i>i></div></div><div class="stat-card"><span class="stat-label">SESI BELAJAR</span><strong>08 <small>/ 12</small></strong><span class="stat-trend neutral">Target tetap berjalan</span><div class="week-dots"><i class="done"></i>i><i class="done"></i>i><i class="done"></i>i><i class="done"></i>i><i class="done"></i>i><i></i><i></i></div></div><div class="stat-card accent-card"><span class="stat-label">STREAK TERBAIK</span><strong>12 <small>hari</small></strong><span class="stat-trend">Konsisten itu keren ✦</span><div class="streak-spark">╱╲╱╲╱╲╱╲</div></div></div>
-                
-                        <section class="chat-card" aria-label="Chat dengan GoalGlint">
-                                  <div class="chat-header"><div class="assistant-id"><div class="assistant-avatar">✦</div><div><strong>Glint AI</strong><span><i></i> Study companion kamu</span></div></div><button class="more-button" aria-label="Opsi chat">•••</button>button></div>
-                                  <div class="messages" id="messages"><div class="message assistant"><div class="message-avatar">✦</div><div class="bubble"><p>Hai, Taniki! Aku siap bantu kamu belajar <strong>Product Design</strong> hari ini. Mau mulai dari mana?</p><div class="quick-actions"><button data-prompt="Buatkan rencana belajar untuk hari ini">Buat rencana belajar</button>button><button data-prompt="Jelaskan prinsip dasar user experience">Jelaskan konsep</button>button><button data-prompt="Bantu review tugas saya">Review tugas</button>button></div></div></div></div>
-                                  <form class="composer" id="chatForm"><div class="composer-tools"><button type="button" aria-label="Lampirkan file">＋</button>button><span class="composer-hint">Tanya apa saja tentang kelasmu...</span></div><div class="composer-bottom"><span class="shortcut-hint">Enter untuk mengirim · Shift + Enter untuk baris baru</span><button class="send-button" type="submit" aria-label="Kirim pesan">↑</button>button></div></form>form>
-                        </section>section>
-                        <p class="template-note"><span>✦</span> Ini adalah template interface. Hubungkan endpoint AI pilihanmu untuk membuat Glint benar-benar menjawab.</p>
-                </section>section>
-          </main>main>
-      </div>
-  <div class="toast" id="toast" role="status"></div>
-  <script src="script.js"></script>
+                    <div class="date-card">
+                        <span class="date-icon">◷</span>
+                        <div><small>Fokus hari ini</small><strong>2 jam 30 menit</strong></div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <span class="stat-label">PROGRESS MINGGU INI</span>
+                        <strong>68%</strong>
+                        <span class="stat-trend">↗ +12% dari minggu lalu</span>
+                        <div class="progress-bar"><i style="width:68%"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">SESI BELAJAR</span>
+                        <strong>08 <small>/ 12</small></strong>
+                        <span class="stat-trend neutral">Target tetap berjalan</span>
+                        <div class="week-dots">
+                            <i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i>
+                        </div>
+                    </div>
+                    <div class="stat-card accent-card">
+                        <span class="stat-label">STREAK TERBAIK</span>
+                        <strong>12 <small>hari</small></strong>
+                        <span class="stat-trend">Konsisten itu keren ✦</span>
+                        <div class="streak-spark">╱╲╱╲╱╲╱╲</div>
+                    </div>
+                </div>
+
+                <section class="chat-card" aria-label="Chat dengan GoalGlint">
+                    <div class="chat-header">
+                        <div class="assistant-id">
+                            <div class="assistant-avatar">✦</div>
+                            <div><strong>Glint AI</strong><span><i></i> Study companion kamu</span></div>
+                        </div>
+                        <button class="more-button" aria-label="Opsi chat">•••</button>
+                    </div>
+
+                    <div class="messages" id="messages">
+                        <div class="message assistant">
+                            <div class="message-avatar">✦</div>
+                            <div class="bubble">
+                                <p>Hai, Taniki! Aku siap bantu kamu belajar <strong>Product Design</strong> hari ini. Mau mulai dari mana?</p>
+                                <div class="quick-actions">
+                                    <button data-prompt="Buatkan rencana belajar untuk hari ini">Buat rencana belajar</button>
+                                    <button data-prompt="Jelaskan prinsip dasar user experience">Jelaskan konsep</button>
+                                    <button data-prompt="Bantu review tugas saya">Review tugas</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form class="composer" id="chatForm">
+                        <div class="composer-tools">
+                            <button type="button" aria-label="Lampirkan file">＋</button>
+                            <input type="text" placeholder="Tanya apa saja tentang kelasmu..." required />
+                        </div>
+                        <div class="composer-bottom">
+                            <span class="shortcut-hint">Enter untuk mengirim · Shift + Enter untuk baris baru</span>
+                            <button class="send-button" type="submit" aria-label="Kirim pesan">↑</button>
+                        </div>
+                    </form>
+                </section>
+
+                <p class="template-note"><span>✦</span> Ini adalah template interface. Hubungkan endpoint AI pilihanmu untuk membuat Glint benar-benar menjawab.</p>
+            </section>
+        </main>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="script.js"></script>
 </body>
-</html>html></p></i></i></em></h1></span></small></strong></div></kbd></span></span>
-</body></title>
-    </head>
+</html>
