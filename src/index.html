@@ -1,92 +1,65 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetterMe - Web Template</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
+    <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta name="description" content="GoalGlint — ruang belajar cerdas untuk fokus, kelas, dan kemajuanmu.">
+          <title>GoalGlint — Your learning workspace</title>
+      <link rel="stylesheet" href="style.css">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    </head>
 <body>
-    <header class="navbar">
-        <div class="container">
-            <a href="#" class="logo">BetterMe</a>
-            <nav>
-                <ul class="nav-links">
-                    <li><a href="#about">Tentang</a></li>
-                    <li><a href="#features">Fitur</a></li>
-                    <li><a href="#contact">Kontak</a></li>
-                </ul>
-            </nav>
-            <a href="#" class="btn-cta">Mulai Sekarang</a>
-        </div>
-    </header>
-
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Transformasi Hidup Sehat</h1>
-                <p>Bergabunglah dengan ribuan pengguna yang telah mencapai tujuan kesehatan mereka dengan BetterMe</p>
-                <div class="hero-buttons">
-                    <a href="#" class="btn-primary">Daftar Gratis</a>
-                    <a href="#" class="btn-secondary">Pelajari Lebih Lanjut</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <main>
-        <section id="about" class="about">
-            <div class="container">
-                <h2>Tentang BetterMe</h2>
-                <p>BetterMe adalah platform komprehensif untuk perjalanan kesehatan dan well-being Anda. Dari latihan fisik hingga nutrisi, kami hadir untuk membimbing Anda setiap langkah.</p>
-            </div>
-        </section>
-
-        <section id="features" class="features">
-            <div class="container">
-                <h2>Fitur Utama</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>Pelacakan Progress</h3>
-                        <p>Monitor perkembangan kesehatan Anda dengan grafik dan laporan detail</p>
+      <div class="app-shell">
+              <aside class="sidebar" id="sidebar">
+                        <div class="sidebar-top">
+                                    <a class="brand" href="#" aria-label="GoalGlint home"><span class="brand-mark">✦</span>span><span>Goal<span>Glint</span></span></a>a>
+                                <button class="icon-button sidebar-close" id="closeSidebar" aria-label="Tutup sidebar">×</button>button>
+                        </div>div>
+                    <button class="new-chat" id="newChat"><span>＋</span> Chat baru <kbd>⌘ K</kbd></button>button>
+                    <nav class="main-nav" aria-label="Navigasi utama">
+                            <a class="nav-item active" href="#chat"><span class="nav-icon">⌂</span> Workspace</a>a>
+                            <a class="nav-item" href="#saved"><span class="nav-icon">▱</span> Tersimpan <span class="nav-count">3</span></a>a>
+                            <a class="nav-item" href="#progress"><span class="nav-icon">◒</span> Progress</a>a>
+                    </nav>nav>
+                    <div class="class-section">
+                            <div class="section-label"><span>KELAS SAYA</span><button class="add-class" id="addClass" aria-label="Tambah kelas">＋</button>button></div>div>
+                            <div class="class-list" id="classList">
+                                      <button class="class-item active" data-class="Product Design"><span class="class-dot coral"></span><span>Product Design</span><span class="class-more">•••</span></button>button>
+                                      <button class="class-item" data-class="Web Development"><span class="class-dot blue"></span><span>Web Development</span><span class="class-more">•••</span></button>button>
+                                      <button class="class-item" data-class="English Speaking"><span class="class-dot green"></span><span>English Speaking</span><span class="class-more">•••</span></button>button>
+                                      <button class="class-item" data-class="Personal Growth"><span class="class-dot violet"></span><span>Personal Growth</span><span class="class-more">•••</span></button>button>
+                            </div>div>
+                    </div>div>
+                    <div class="sidebar-bottom">
+                            <div class="mini-profile"><div class="avatar">T</div>div><div><strong>Taniki</strong><small>Free workspace</small></div><button class="icon-button">•••</button>button></div>
                     </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🍎</div>
-                        <h3>Nutrisi Sehat</h3>
-                        <p>Rencana makan personal sesuai kebutuhan tubuh Anda</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🏃</div>
-                        <h3>Latihan Fisik</h3>
-                        <p>Program olahraga yang dapat disesuaikan dengan target Anda</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="contact" class="contact">
-            <div class="container">
-                <h2>Kontak Kami</h2>
-                <p>Siap memulai perjalanan kesehatan Anda? Hubungi kami untuk informasi lebih lanjut.</p>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 BetterMe. Hak cipta dilindungi.</p>
-            <div class="footer-links">
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-                <a href="#">Contact</a>
-            </div>
-        </div>
-    </footer>
-
-    <script src="script.js"></script>
+              </aside>aside>
+      
+          <main class="main-panel" id="chat">
+                <header class="topbar">
+                        <button class="icon-button menu-button" id="openSidebar" aria-label="Buka sidebar">☰</button>button>
+                        <div class="breadcrumb"><span class="muted">Workspace</span><span>/</span><strong id="currentClass">Product Design</strong></div>
+                        <div class="top-actions"><button class="icon-button" aria-label="Cari">⌕</button>button><button class="icon-button" aria-label="Notifikasi">♢</button>button><button class="avatar small">T</button>button></div>
+                </header>header>
+          
+                <section class="content-wrap">
+                        <div class="welcome-row"><div><p class="eyebrow">SELAMAT DATANG KEMBALI, TANIKI</p>p><h1>What are we learning<br><em>today?</em></h1></div><div class="date-card"><span class="date-icon">◷</span><div><small>Fokus hari ini</small><strong>2 jam 30 menit</strong></div></div></div>
+                        <div class="stats-row"><div class="stat-card"><span class="stat-label">PROGRESS MINGGU INI</span><strong>68%</strong><span class="stat-trend">↗ +12% dari minggu lalu</span><div class="progress-bar"><i style="width:68%"></i>i></div></div><div class="stat-card"><span class="stat-label">SESI BELAJAR</span><strong>08 <small>/ 12</small></strong><span class="stat-trend neutral">Target tetap berjalan</span><div class="week-dots"><i class="done"></i>i><i class="done"></i>i><i class="done"></i>i><i class="done"></i>i><i class="done"></i>i><i></i><i></i></div></div><div class="stat-card accent-card"><span class="stat-label">STREAK TERBAIK</span><strong>12 <small>hari</small></strong><span class="stat-trend">Konsisten itu keren ✦</span><div class="streak-spark">╱╲╱╲╱╲╱╲</div></div></div>
+                
+                        <section class="chat-card" aria-label="Chat dengan GoalGlint">
+                                  <div class="chat-header"><div class="assistant-id"><div class="assistant-avatar">✦</div><div><strong>Glint AI</strong><span><i></i> Study companion kamu</span></div></div><button class="more-button" aria-label="Opsi chat">•••</button>button></div>
+                                  <div class="messages" id="messages"><div class="message assistant"><div class="message-avatar">✦</div><div class="bubble"><p>Hai, Taniki! Aku siap bantu kamu belajar <strong>Product Design</strong> hari ini. Mau mulai dari mana?</p><div class="quick-actions"><button data-prompt="Buatkan rencana belajar untuk hari ini">Buat rencana belajar</button>button><button data-prompt="Jelaskan prinsip dasar user experience">Jelaskan konsep</button>button><button data-prompt="Bantu review tugas saya">Review tugas</button>button></div></div></div></div>
+                                  <form class="composer" id="chatForm"><div class="composer-tools"><button type="button" aria-label="Lampirkan file">＋</button>button><span class="composer-hint">Tanya apa saja tentang kelasmu...</span></div><div class="composer-bottom"><span class="shortcut-hint">Enter untuk mengirim · Shift + Enter untuk baris baru</span><button class="send-button" type="submit" aria-label="Kirim pesan">↑</button>button></div></form>form>
+                        </section>section>
+                        <p class="template-note"><span>✦</span> Ini adalah template interface. Hubungkan endpoint AI pilihanmu untuk membuat Glint benar-benar menjawab.</p>
+                </section>section>
+          </main>main>
+      </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="script.js"></script>
 </body>
-</html>
+</html>html></p></i></i></em></h1></span></small></strong></div></kbd></span></span>
+</body></title>
+    </head>
