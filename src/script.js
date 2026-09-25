@@ -1,14 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
-      const messages = document.getElementById('messages');
-      const form = document.getElementById('chatForm');
-      const hint = document.querySelector('.composer-hint');
-      const currentClass = document.getElementById('currentClass');
-      const sidebar = document.getElementById('sidebar');
-      const toast = document.getElementById('toast');
-      const openSidebar = document.getElementById('openSidebar');
-      const closeSidebar = document.getElementById('closeSidebar');
-      const classList = document.getElementById('classList');
-      let selectedClass = 'Product Design';
+        const messages = document.getElementById('messages');
+        const form = document.getElementById('chatForm');
+        const hint = document.querySelector('.composer-hint');
+        const currentClass = document.getElementById('currentClass');
+        const sidebar = document.getElementById('sidebar');
+        const toast = document.getElementById('toast');
+        const openSidebar = document.getElementById('openSidebar');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const classList = document.getElementById('classList');
+
+        const progressInt = document.getElementById('ProgressInt');
+
+        const observer = new MutationObserver(() => {
+                const progressBar = document.querySelector(".progress-bar i");
+                if (progressBar) {
+                        const value = parseInt(progressInt.textContent);
+                        progressBar.style.width = value + "%";
+                }
+        });
+
+        observer.observe(progressInt, { childList: true, subtree: true });
+
+        const weekDots = document.querySelectorAll('.week-dots i');
+        //weekDots.forEach(dot => dot.classList.add('done'));
+
+        let selectedClass = 'contoh class';
 
                             const showToast = (message) => {
                                     toast.textContent = message;
@@ -100,3 +116,42 @@ document.addEventListener('DOMContentLoaded', () => {
               if (event.key === 'Escape') sidebar.classList.remove('open');
       });
 });
+// Domain Vercel milikmu
+const BACKEND_URL = 'https://backend-beta-black-91.vercel.app';
+
+// 1. Tes Koneksi ke Backend
+async function testConnection() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/test`);
+    const data = await res.json();
+    console.log('Status Backend:', data.message);
+  } catch (err) {
+    console.error('Gagal terhubung ke backend:', err);
+  }
+}
+
+// 2. Fungsi Kirim Pesan ke AI (Groq)
+async function sendChatMessage(userMessage) {
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/ai/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: userMessage }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.response; // Mengembalikan balasan dari Groq AI
+  } catch (error) {
+    console.error('Error memanggil AI:', error);
+    return 'Maaf, terjadi kesalahan saat menghubungkan ke AI.';
+  }
+}
+
+// Jalankan tes koneksi saat halaman dimuat
+testConnection();

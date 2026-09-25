@@ -21,7 +21,7 @@
                 <button class="icon-button sidebar-close" id="closeSidebar" aria-label="Tutup sidebar">×</button>
             </div>
             <button class="new-chat" id="newChat">
-                <span>＋</span> Chat baru <kbd>⌘ K</kbd>
+                <span>+</span> Chat baru <kbd>⌘ K</kbd>
             </button>
             <nav class="main-nav" aria-label="Navigasi utama">
                 <a class="nav-item active" href="#chat"><span class="nav-icon">⌂</span> Workspace</a>
@@ -34,10 +34,8 @@
                     <button class="add-class" id="addClass" aria-label="Tambah kelas">＋</button>
                 </div>
                 <div class="class-list" id="classList">
-                    <button class="class-item active" data-class="Product Design"><span class="class-dot coral"></span><span>Product Design</span><span class="class-more">•••</span></button>
-                    <button class="class-item" data-class="Web Development"><span class="class-dot blue"></span><span>Web Development</span><span class="class-more">•••</span></button>
-                    <button class="class-item" data-class="English Speaking"><span class="class-dot green"></span><span>English Speaking</span><span class="class-more">•••</span></button>
-                    <button class="class-item" data-class="Personal Growth"><span class="class-dot violet"></span><span>Personal Growth</span><span class="class-more">•••</span></button>
+                    <button class="class-item active" data-class="contoh class"><span class="class-dot coral"></span><span>contoh class</span><span class="class-more">•••</span></button>
+
                 </div>
             </div>
             <div class="sidebar-bottom">
@@ -52,7 +50,7 @@
         <main class="main-panel" id="chat">
             <header class="topbar">
                 <button class="icon-button menu-button" id="openSidebar" aria-label="Buka sidebar">☰</button>
-                <div class="breadcrumb"><span class="muted">Workspace</span><span>/</span><strong id="currentClass">Product Design</strong></div>
+                <div class="breadcrumb"><span class="muted">Workspace</span><span>/</span><strong id="currentClass">contoh class</strong></div>
                 <div class="top-actions">
                     <button class="icon-button" aria-label="Cari">⌕</button>
                     <button class="icon-button" aria-label="Notifikasi">♢</button>
@@ -75,21 +73,21 @@
                 <div class="stats-row">
                     <div class="stat-card">
                         <span class="stat-label">PROGRESS MINGGU INI</span>
-                        <strong>68%</strong>
+                        <strong id="ProgressInt">0%</strong>
                         <span class="stat-trend">↗ +12% dari minggu lalu</span>
-                        <div class="progress-bar"><i style="width:68%"></i></div>
+                        <div class="progress-bar"><i style="width:0%;"></i></div>
                     </div>
                     <div class="stat-card">
                         <span class="stat-label">SESI BELAJAR</span>
-                        <strong>08 <small>/ 12</small></strong>
+                        <strong>00 <small>/ N/A</small></strong>
                         <span class="stat-trend neutral">Target tetap berjalan</span>
-                        <div class="week-dots">
-                            <i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i>
+                        <div class="week-dots"> <!--kosong hanya i jika sudah class = done -->
+                            <i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i><i class="none"></i>
                         </div>
                     </div>
                     <div class="stat-card accent-card">
                         <span class="stat-label">STREAK TERBAIK</span>
-                        <strong>12 <small>hari</small></strong>
+                        <strong>0 <small>hari</small></strong>
                         <span class="stat-trend">Konsisten itu keren ✦</span>
                         <div class="streak-spark">╱╲╱╲╱╲╱╲</div>
                     </div>
@@ -108,7 +106,7 @@
                         <div class="message assistant">
                             <div class="message-avatar">✦</div>
                             <div class="bubble">
-                                <p>Hai, Taniki! Aku siap bantu kamu belajar <strong>Product Design</strong> hari ini. Mau mulai dari mana?</p>
+                                <p>Hai, Taniki! Aku siap bantu kamu belajar <strong>contoh class</strong> hari ini. Mau mulai dari mana?</p>
                                 <div class="quick-actions">
                                     <button data-prompt="Buatkan rencana belajar untuk hari ini">Buat rencana belajar</button>
                                     <button data-prompt="Jelaskan prinsip dasar user experience">Jelaskan konsep</button>
