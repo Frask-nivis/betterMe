@@ -139,7 +139,11 @@
 
                     <form class="composer" id="chatForm">
                         <div class="composer-tools">
-                            <button type="button" aria-label="Lampirkan file">＋</button>
+                            <button type="button" class="attach-button" aria-label="Lampirkan file">＋</button>
+                            <div class="attach-preview" id="attachPreview" hidden>
+                                <span id="attachFileName"></span>
+                                <button type="button" class="remove-attach" aria-label="Hapus lampiran">×</button>
+                            </div>
                             <input type="text" class="textBox" placeholder="Login untuk bertanya pada Glint AI..." required disabled />
                         </div>
                         <div class="composer-bottom">

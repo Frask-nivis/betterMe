@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const miniProfile = document.getElementById('miniProfile');
     const profileMenuToggle = document.getElementById('profileMenuToggle');
     const profileMenu = document.getElementById('profileMenu');
+    const attachButton = document.querySelector('.attach-button');
+    const attachPreview = document.getElementById('attachPreview');
     const authAction = document.getElementById('authAction');
     const topAvatar = document.getElementById('topAvatar');
     const profileName = document.getElementById('profileName');
@@ -297,12 +299,23 @@ document.addEventListener('DOMContentLoaded', () => {
         profileMenu.setAttribute('aria-hidden', 'true');
     };
 
+    const closeAttachPreview = () => {
+        attachPreview.classList.remove('show');
+        attachButton.setAttribute('aria-expanded', 'false');
+    };
+
     profileMenuToggle.addEventListener('click', (e) => {
         e.stopPropagation();
         document.querySelectorAll('.popup-menu.show').forEach((menu) => menu.classList.remove('show'));
         const isOpen = profileMenu.classList.toggle('show');
         profileMenuToggle.setAttribute('aria-expanded', String(isOpen));
         profileMenu.setAttribute('aria-hidden', String(!isOpen));
+    });
+
+    attachButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = attachPreview.classList.toggle('show');
+        attachButton.setAttribute('aria-expanded', String(isOpen));
     });
 
     profileMenu.querySelector('.action-logout').addEventListener('click', async (e) => {
@@ -328,6 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('click', (e) => {
         if (!e.target.closest('.mini-profile')) closeProfileMenu();
+        if (!e.target.closest('.attach-button')) closeAttachPreview();
         document.querySelectorAll('.popup-menu.show').forEach((menu) => {
             menu.classList.remove('show');
         });
