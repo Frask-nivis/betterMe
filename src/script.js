@@ -12,7 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileMenuToggle = document.getElementById('profileMenuToggle');
     const profileMenu = document.getElementById('profileMenu');
     const attachButton = document.querySelector('.attach-button');
+    const attachInput = document.getElementById('attachInput');
     const attachPreview = document.getElementById('attachPreview');
+    const attachFileName = document.getElementById('attachFileName');
+    const removeAttach = document.querySelector('.remove-attach');
     const authAction = document.getElementById('authAction');
     const topAvatar = document.getElementById('topAvatar');
     const profileName = document.getElementById('profileName');
@@ -23,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const composerInput = form.querySelector('.textBox');
     const sendButton = form.querySelector('.send-button');
     let currentUser = null;
+    let selectedFile = null;
 
     const template = document.getElementById('classItemTemplate');
     // Domain Vercel milikmu
@@ -299,8 +303,20 @@ document.addEventListener('DOMContentLoaded', () => {
         profileMenu.setAttribute('aria-hidden', 'true');
     };
 
-    const closeAttachPreview = () => {
+    const showAttachPreview = (file) => {
+        selectedFile = file;
+        attachFileName.textContent = file.name;
+        attachPreview.hidden = false;
+        attachPreview.classList.add('show');
+        attachButton.setAttribute('aria-expanded', 'true');
+    };
+
+    const clearAttachment = () => {
+        selectedFile = null;
+        attachInput.value = '';
+        attachFileName.textContent = '';
         attachPreview.classList.remove('show');
+        attachPreview.hidden = true;
         attachButton.setAttribute('aria-expanded', 'false');
     };
 
@@ -314,8 +330,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     attachButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        const isOpen = attachPreview.classList.toggle('show');
-        attachButton.setAttribute('aria-expanded', String(isOpen));
+        attachInput.click();
+    });
+
+    attachInput.addEventListener('change', () => {
+        const file = attachInput.files && attachInput.files[0];
+        if (file) showAttachPreview(file);
+    });
+
+    removeAttach.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clearAttachment();
     });
 
     profileMenu.querySelector('.action-logout').addEventListener('click', async (e) => {
@@ -341,7 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('click', (e) => {
         if (!e.target.closest('.mini-profile')) closeProfileMenu();
-        if (!e.target.closest('.attach-button')) closeAttachPreview();
         document.querySelectorAll('.popup-menu.show').forEach((menu) => {
             menu.classList.remove('show');
         });
