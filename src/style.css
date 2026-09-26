@@ -233,6 +233,7 @@ a {
 }
 
 .class-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -253,6 +254,7 @@ a {
   box-shadow: 0 5px 15px rgba(60, 68, 100, 0.05);
 }
 
+
 .class-dot {
   width: 8px;
   height: 8px;
@@ -269,7 +271,68 @@ a {
   margin-left: auto;
   color: #c5c9d7;
   letter-spacing: 1px;
+  cursor: pointer;
   opacity: 0;
+}
+
+.popup-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  border-radius: 6px;
+  z-index: 10;
+  min-width: 120px;
+}
+
+.popup-menu a {
+  display: block;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+}
+
+.popup-menu a:hover {
+  background-color: #f5f5f5;
+}
+
+/* Class untuk menampilkan popup */
+.popup-menu.show {
+  display: flex;
+}
+/* menu for profile */
+.popup-menu-mini-profile {
+  display: none;
+  position: absolute;
+  flex-direction: column-reverse;
+  right: -8%;
+  top: -100%;
+  background: #ffffff;
+  border-top: 1px solid #ddd;
+  border-radius: 6px;
+  z-index: 10;
+  min-width: 116.3%;
+}
+
+.popup-menu-mini-profile a {
+  display: block;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+}
+
+.popup-menu-mini-profile a:hover {
+  background-color: #f5f5f5;
+}
+
+/* Class untuk menampilkan popup */
+.popup-menu-mini-profile.show {
+  display: flex;
 }
 
 .class-item:hover .class-more {
@@ -284,6 +347,7 @@ a {
 }
 
 .mini-profile {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -724,6 +788,19 @@ a {
   color: #848da7;
   background: #fafbfe;
   font-size: 16px;
+}
+
+.textBox {
+  width: 100%;
+  min-height: 30px;
+  max-height: 90px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .composer-hint {

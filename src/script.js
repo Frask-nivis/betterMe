@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeSidebar = document.getElementById('closeSidebar');
     const classList = document.getElementById('classList');
 
+    const template = document.getElementById('classItemTemplate');
     // Domain Vercel milikmu
     const BACKEND_URL = 'https://backend-beta-black-91.vercel.app';
     
@@ -108,9 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
         hint.textContent = 'Tanya apa saja tentang kelasmu...';
     };
 
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const text = form.querySelector('input').value;
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = form.querySelector('.textBox').value;
         if (text) sendMessage(text);
         form.reset();
     });
@@ -120,7 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.class-item').forEach((item) => {
-        item.addEventListener('click', () => {
+        item.addEventListener('click', (e) => {
+            if (e.target.closest('.class-more')) return; // Jangan aktifkan jika tombol "more" diklik
             document.querySelectorAll('.class-item').forEach((classItem) => classItem.classList.remove('active'));
             item.classList.add('active');
             selectedClass = item.dataset.class || 'Product Design';
@@ -135,32 +137,111 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Chat baru dibuat');
     });
 
+    function getRandomColor() {
+        // Implement your color generation logic here
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        console.log('Generated random color:', color); // Debug log
+        return color;
+    }
+
     document.getElementById('addClass').addEventListener('click', () => {
-        const name = window.prompt('Nama kelas baru:');
+        const color = getRandomColor();
+        let name = "New Class"
         if (!name || !name.trim()) return;
-        const item = document.createElement('button');
+        const itemClone = template.content.cloneNode(true);
+        const item = itemClone.querySelector('.class-item');
         item.className = 'class-item';
         item.dataset.class = name.trim();
-        item.innerHTML = '<span class="class-dot violet"></span><span></span><span class="class-more">•••</span>';
         item.querySelector('span:nth-child(2)').textContent = name.trim();
-        item.addEventListener('click', () => {
+        item.querySelector('.class-dot').style.backgroundColor = color;
+        item.addEventListener('click', (e) => {
+            if (e.target.closest('.class-more')) return; // Jangan aktifkan jika tombol "more" diklik
             document.querySelectorAll('.class-item').forEach((classItem) => classItem.classList.remove('active'));
             item.classList.add('active');
             selectedClass = name.trim();
             currentClass.textContent = selectedClass;
             showToast('Kelas aktif: ' + selectedClass);
         });
-        classList.appendChild(item);
+        item.querySelector('.action-edit').addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+
+            const label = item.querySelector('span:nth-child(2)');
+
+            item.querySelector('.popup-menu').classList.remove('show');
+            label.style.display = 'none';
+
+            const rename = item.querySelector('.rename');
+            rename.style.display = 'inline-block';
+            rename.value = name.trim();
+            rename.focus();
+            
+            function handleRenameKeydown(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    rename.blur();
+                }
+            }
+            const saveRename = () => {
+                const newName = rename.value.trim();
+
+                if (newName) {
+                    item.dataset.class = newName;
+                    label.textContent = newName;
+                    name = newName;
+                    showToast('Nama kelas diubah menjadi: ' + newName);
+                }
+                rename.style.display = 'none';
+                label.style.display = 'inline-block';
+                rename.removeEventListener('keydown', handleRenameKeydown);
+            }
+            const newName = rename.value;
+            // berasumsi bahwa nama sudah terisi
+            rename.addEventListener('keydown', handleRenameKeydown);
+            rename.addEventListener('blur', saveRename, { once: true });
+        });
+        item.querySelector('.action-delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (confirm('Apakah Anda yakin ingin menghapus kelas ini?')) {
+                item.remove();
+                showToast('Kelas dihapus');
+            }
+        });
+        classList.appendChild(itemClone);
         showToast('Kelas baru ditambahkan');
     });
 
     openSidebar.addEventListener('click', () => sidebar.classList.add('open'));
     closeSidebar.addEventListener('click', () => sidebar.classList.remove('open'));
-    document.addEventListener('keydown', (event) => {
-        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { 
-            event.preventDefault(); 
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { 
+            e.preventDefault(); 
             document.getElementById('newChat').click(); 
         }
-        if (event.key === 'Escape') sidebar.classList.remove('open');
+        if (e.key === 'Escape') sidebar.classList.remove('open');
+    });
+
+    classList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('class-more')) {
+            e.stopPropagation();
+
+            const item = e.target.closest('.class-item');
+            const popup = item.querySelector('.popup-menu');
+            document.querySelectorAll('.popup-menu').forEach((menu) => {
+                if (menu !== popup) menu.classList.remove('show');
+            });
+            popup.classList.add('show');
+        };
+    });
+
+    window.addEventListener('click', () => {
+        document.querySelectorAll('.popup-menu.show').forEach((menu) => {
+            menu.classList.remove('show');
+        });
     });
 });
