@@ -331,5 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.popup-menu.show').forEach((menu) => {
             menu.classList.remove('show');
         });
+    });
+
     initAuth();
 });
