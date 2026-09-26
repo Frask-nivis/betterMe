@@ -353,31 +353,44 @@ a {
 
 /* popup toast for attachment */
 
+.attach-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .attach-preview {
   display: none;
   position: absolute;
   left: 0;
   right: 0;
   bottom: calc(100% + 8px);
-  flex-direction: column;
-  padding: 4px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px 7px 10px;
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(47, 56, 93, 0.08);
   z-index: 1;
 }
 
-.attach-preview a {
-  display: block;
-  padding: 9px 12px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #333;
-  font-size: 14px;
+.attach-file-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #4d5874;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.attach-preview a:hover {
-  background-color: #f5f5f5;
+.remove-attach {
+  flex: 0 0 auto;
+  color: #b74747 !important;
 }
 
 .attach-preview.show {
