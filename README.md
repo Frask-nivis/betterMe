@@ -10,13 +10,6 @@ BetterMe adalah web statis ringan yang dirancang untuk platform pengumpulan tuga
 - **Desain Responsif**: Layar menyesuaikan secara otomatis untuk perangkat seluler, tablet, dan desktop.
 - **Tanpa Build Step**: Dapat dijalankan langsung di *browser* atau diunggah ke penyedia *hosting* statis.
 
-## Struktur Proyek
+## LINK TERKAIT
 
-```text
-betterMe/
-├── src/
-│   ├── index.html       # Struktur halaman utama
-│   ├── style.css        # Gaya visual dan tata letak
-│   └── script.js        # Logika interaksi antarmuka
-├── package.json         # Konfigurasi dependensi opsional (live-server)
-└── README.md            # Dokumentasi proyek
+https://goalglint.pages.dev/
