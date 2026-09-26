@@ -55,14 +55,12 @@
             </div>
             <div class="sidebar-bottom">
                 <div class="mini-profile" id="miniProfile">
-                    <div class="avatar">
-                        Ϙ
-                    </div>
-                    <div><strong>Login</strong><small>Free workspace</small></div>
+                    <div class="avatar" id="profileAvatar">Ϙ</div>
+                    <div><strong id="profileName">Guest</strong><small id="profileStatus">Login untuk memakai AI</small></div>
                     <button class="icon-button profile-menu-toggle" id="profileMenuToggle" aria-label="Buka menu profil" aria-expanded="false">•••</button>
                     <div class="popup-menu-mini-profile" id="profileMenu" aria-hidden="true">
-                        <a href="#" role="button" tabindex="0" class="action-logout" style="display: none;">Logout</a>
-                        <a href="#" role="button" tabindex="0" class="login">login</a>
+                        <a href="#" role="button" tabindex="0" class="action-logout" hidden>Logout</a>
+                        <a href="login.html" role="button" tabindex="0" class="login" id="profileLogin">Login Google</a>
                         <a href="#" role="button" tabindex="0" class="action-settings">Pengaturan</a>
                     </div>
                 </div>
@@ -76,7 +74,8 @@
                 <div class="top-actions">
                     <button class="icon-button" aria-label="Cari">⌕</button>
                     <button class="icon-button" aria-label="Notifikasi">♢</button>
-                    <button class="avatar small">Ϙ</button>
+                    <a class="auth-action" id="authAction" href="login.html">Login Google</a>
+                    <button class="avatar small" id="topAvatar" hidden>G</button>
                 </div>
             </header>
 
@@ -141,13 +140,14 @@
                     <form class="composer" id="chatForm">
                         <div class="composer-tools">
                             <button type="button" aria-label="Lampirkan file">＋</button>
-                            <input type="text" class="textBox" placeholder="Tanya apa saja tentang kelasmu..." required />
+                            <input type="text" class="textBox" placeholder="Login untuk bertanya pada Glint AI..." required disabled />
                         </div>
                         <div class="composer-bottom">
                             <span class="shortcut-hint">Enter untuk mengirim · Shift + Enter untuk baris baru</span>
-                            <button class="send-button" type="submit" aria-label="Kirim pesan">↑</button>
+                            <button class="send-button" type="submit" aria-label="Kirim pesan" disabled>↑</button>
                         </div>
                     </form>
+                    <p class="login-hint" id="loginHint">Login dengan Google untuk menggunakan Glint AI.</p>
                 </section>
 
                 <p class="template-note"><span>✦</span> Ini adalah template interface. Hubungkan endpoint AI pilihanmu untuk membuat Glint benar-benar menjawab.</p>
