@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         profileMenu.setAttribute('aria-hidden', String(!isOpen));
     });
 
-    profileMenu.querySelector('.action-logout').addEventListener('click', (e) => {
+    profileMenu.querySelector('.action-logout').addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
         closeProfileMenu();
