@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.boxicons.com/3.0.8/fonts/filled/boxicons-filled.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="app-shell">
@@ -54,11 +55,15 @@
             </div>
             <div class="sidebar-bottom">
                 <div class="mini-profile" id="miniProfile">
-                    <div class="avatar">T</div>
-                    <div><strong>Taniki</strong><small>Free workspace</small></div>
+                    <div class="avatar">
+                        Ϙ
+                    </div>
+                    <div><strong>Login</strong><small>Free workspace</small></div>
                     <button class="icon-button profile-menu-toggle" id="profileMenuToggle" aria-label="Buka menu profil" aria-expanded="false">•••</button>
                     <div class="popup-menu-mini-profile" id="profileMenu" aria-hidden="true">
-                        <a href="#" role="button" tabindex="0" class="action-logout">Logout</a>
+                        <a href="#" role="button" tabindex="0" class="action-logout" style="display: none;">Logout</a>
+                        <a href="#" role="button" tabindex="0" class="login">login</a>
+                        <a href="#" role="button" tabindex="0" class="action-settings">Pengaturan</a>
                     </div>
                 </div>
             </div>
@@ -71,14 +76,14 @@
                 <div class="top-actions">
                     <button class="icon-button" aria-label="Cari">⌕</button>
                     <button class="icon-button" aria-label="Notifikasi">♢</button>
-                    <button class="avatar small">T</button>
+                    <button class="avatar small">Ϙ</button>
                 </div>
             </header>
 
             <section class="content-wrap">
                 <div class="welcome-row"> 
                     <div>
-                        <p class="eyebrow">SELAMAT DATANG KEMBALI, TANIKI</p>
+                        <p class="eyebrow">SELAMAT DATANG!</p>
                         <h1>What are we learning<br><em>today?</em></h1>
                     </div>
                     <div class="date-card">
@@ -123,7 +128,7 @@
                         <div class="message assistant">
                             <div class="message-avatar">✦</div>
                             <div class="bubble">
-                                <p>Hai, Taniki! Aku siap bantu kamu belajar <strong>contoh class</strong> hari ini. Mau mulai dari mana?</p>
+                                <p>Hai!, Aku siap bantu kamu belajar <strong>contoh class</strong> hari ini. Mau mulai dari mana?</p>
                                 <div class="quick-actions">
                                     <button data-prompt="Buatkan rencana belajar untuk hari ini">Buat rencana belajar</button>
                                     <button data-prompt="Jelaskan prinsip dasar user experience">Jelaskan konsep</button>
