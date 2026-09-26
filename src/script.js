@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const openSidebar = document.getElementById('openSidebar');
     const closeSidebar = document.getElementById('closeSidebar');
     const classList = document.getElementById('classList');
+    const miniProfile = document.getElementById('miniProfile');
+    const profileMenuToggle = document.getElementById('profileMenuToggle');
+    const profileMenu = document.getElementById('profileMenu');
 
     const template = document.getElementById('classItemTemplate');
     // Domain Vercel milikmu
@@ -226,12 +229,34 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') sidebar.classList.remove('open');
     });
 
+    const closeProfileMenu = () => {
+        profileMenu.classList.remove('show');
+        profileMenuToggle.setAttribute('aria-expanded', 'false');
+        profileMenu.setAttribute('aria-hidden', 'true');
+    };
+
+    profileMenuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.popup-menu.show').forEach((menu) => menu.classList.remove('show'));
+        const isOpen = profileMenu.classList.toggle('show');
+        profileMenuToggle.setAttribute('aria-expanded', String(isOpen));
+        profileMenu.setAttribute('aria-hidden', String(!isOpen));
+    });
+
+    profileMenu.querySelector('.action-logout').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeProfileMenu();
+        showToast('Logout siap diproses');
+    });
+
     classList.addEventListener('click', (e) => {
         if (e.target.classList.contains('class-more')) {
             e.stopPropagation();
 
             const item = e.target.closest('.class-item');
             const popup = item.querySelector('.popup-menu');
+            closeProfileMenu();
             document.querySelectorAll('.popup-menu').forEach((menu) => {
                 if (menu !== popup) menu.classList.remove('show');
             });
@@ -239,7 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    window.addEventListener('click', () => {
+    window.addEventListener('click', (e) => {
+        if (!e.target.closest('.mini-profile')) closeProfileMenu();
         document.querySelectorAll('.popup-menu.show').forEach((menu) => {
             menu.classList.remove('show');
         });
