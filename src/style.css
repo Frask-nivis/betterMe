@@ -327,7 +327,6 @@ a {
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(47, 56, 93, 0.14);
   z-index: 1;
 }
 
