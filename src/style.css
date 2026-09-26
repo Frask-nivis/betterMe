@@ -304,23 +304,37 @@ a {
 .popup-menu.show {
   display: flex;
 }
-/* menu for profile */
+/* Profile popup: anchored above the mini profile without covering it. */
+.sidebar-bottom {
+  position: relative;
+  z-index: 40;
+}
+
+.mini-profile {
+  position: relative;
+  z-index: 2;
+  background: var(--sidebar);
+}
+
 .popup-menu-mini-profile {
   display: none;
   position: absolute;
-  flex-direction: column-reverse;
-  right: -8%;
-  top: -100%;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  flex-direction: column;
+  padding: 4px;
   background: #ffffff;
-  border-top: 1px solid #ddd;
-  border-radius: 6px;
-  z-index: 10;
-  min-width: 116.3%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(47, 56, 93, 0.14);
+  z-index: 1;
 }
 
 .popup-menu-mini-profile a {
   display: block;
-  padding: 8px 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
   text-decoration: none;
   color: #333;
   font-size: 14px;
@@ -330,7 +344,6 @@ a {
   background-color: #f5f5f5;
 }
 
-/* Class untuk menampilkan popup */
 .popup-menu-mini-profile.show {
   display: flex;
 }
