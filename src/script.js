@@ -11,10 +11,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const miniProfile = document.getElementById('miniProfile');
     const profileMenuToggle = document.getElementById('profileMenuToggle');
     const profileMenu = document.getElementById('profileMenu');
+    const authAction = document.getElementById('authAction');
+    const topAvatar = document.getElementById('topAvatar');
+    const profileName = document.getElementById('profileName');
+    const profileStatus = document.getElementById('profileStatus');
+    const profileLogin = document.getElementById('profileLogin');
+    const profileLogout = profileMenu.querySelector('.action-logout');
+    const loginHint = document.getElementById('loginHint');
+    const composerInput = form.querySelector('.textBox');
+    const sendButton = form.querySelector('.send-button');
+    let currentUser = null;
 
     const template = document.getElementById('classItemTemplate');
     // Domain Vercel milikmu
     const BACKEND_URL = 'https://backend-beta-black-91.vercel.app';
+
+    const getCurrentUser = async () => {
+        try {
+            const response = await fetch(BACKEND_URL + '/api/auth/me', { credentials: 'include' });
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data.authenticated ? data.user : null;
+        } catch (error) {
+            console.error('Gagal mengecek session login:', error);
+            return null;
+        }
+    };
+
+    const updateAuthUI = (user) => {
+        const loggedIn = Boolean(user);
+        composerInput.disabled = !loggedIn;
+        sendButton.disabled = !loggedIn;
+        loginHint.hidden = loggedIn;
+        authAction.textContent = loggedIn ? 'Logout' : 'Login Google';
+        authAction.href = loggedIn ? '#' : 'login.html';
+        profileName.textContent = loggedIn ? (user.name || user.email) : 'Guest';
+        profileStatus.textContent = loggedIn ? user.email : 'Login untuk memakai AI';
+        profileLogin.hidden = loggedIn;
+        profileLogout.hidden = !loggedIn;
+        topAvatar.hidden = !loggedIn;
+        if (loggedIn) topAvatar.textContent = (user.name || user.email || 'G').charAt(0).toUpperCase();
+    };
+
+    const logout = async () => {
+        await fetch(BACKEND_URL + '/api/auth/logout', { method: 'POST', credentials: 'include' });
+        window.location.reload();
+    };
+
+    const initAuth = async () => {
+        currentUser = await getCurrentUser();
+        updateAuthUI(currentUser);
+    };
+
+    authAction.addEventListener('click', async (e) => {
+        if (!currentUser) return;
+        e.preventDefault();
+        await logout();
+    });
     
     // 1. Tes Koneksi ke Backend
     async function testConnection() {
@@ -35,9 +88,14 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({ message: userMessage }),
         });
     
+        if (response.status === 401) {
+          window.location.href = 'login.html';
+          return null;
+        }
         if (!response.ok) {
           throw new Error(`HTTP Error status: ${response.status}`);
         }
@@ -90,6 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Fungsi Utama Pengiriman Pesan (Async)
     const sendMessage = async (text) => {
+        if (!currentUser) {
+            showToast('Login dengan Google untuk memakai AI');
+            return;
+        }
         const cleanText = text.trim();
         if (!cleanText) return;
 
@@ -247,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         e.stopPropagation();
         closeProfileMenu();
-        showToast('Logout siap diproses');
+        await logout();
     });
 
     classList.addEventListener('click', (e) => {
@@ -269,5 +331,5 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.popup-menu.show').forEach((menu) => {
             menu.classList.remove('show');
         });
-    });
+    initAuth();
 });
