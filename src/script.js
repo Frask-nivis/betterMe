@@ -29,8 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentUser = null;
     let selectedFiles = [];
     const MAX_ATTACHMENTS = 6;
-    const MAX_FILE_BYTES = 4 * 1024 * 1024;
-    const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
+    const MAX_FILE_BYTES = 20 * 1024 * 1024;
+    const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
+    const MAX_WIRE_BYTES = 3.8 * 1024 * 1024;
 
     const template = document.getElementById('classItemTemplate');
     // Domain Vercel milikmu
@@ -91,11 +92,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 2. Fungsi Kirim Pesan ke AI (Groq)
+    const gzipBlob = async (file) => {
+      if (!('CompressionStream' in window)) return file;
+      try {
+        const stream = file.stream().pipeThrough(new CompressionStream('gzip'));
+        const compressed = await new Response(stream).blob();
+        return compressed.size < file.size ? new File([compressed], `${file.name}.gz`, { type: 'application/gzip' }) : file;
+      } catch (_) {
+        return file;
+      }
+    };
+
+    const compressImage = async (file) => {
+      if (!file.type.startsWith('image/') || file.size < 700 * 1024) return file;
+      try {
+        const bitmap = await createImageBitmap(file);
+        const maxSide = 2200;
+        const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82));
+        bitmap.close();
+        return blob && blob.size < file.size ? new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp' }) : file;
+      } catch (_) {
+        return file;
+      }
+    };
+
+    const prepareAttachment = async (file) => {
+      const image = await compressImage(file);
+      return image === file ? gzipBlob(file) : image;
+    };
+
     async function sendChatMessage(userMessage, attachments = []) {
       try {
+        const prepared = [];
+        let wireBytes = 0;
+        for (const file of attachments) {
+          const uploadFile = await prepareAttachment(file);
+          wireBytes += uploadFile.size;
+          if (wireBytes > MAX_WIRE_BYTES) throw new Error('Attachment masih terlalu besar setelah kompresi. Coba kirim lebih sedikit file atau pecah dokumennya.');
+          prepared.push(uploadFile);
+        }
         const formData = new FormData();
         formData.append('message', userMessage);
-        attachments.forEach((file) => formData.append('attachments', file, file.name));
+        prepared.forEach((file) => formData.append('attachments', file, file.name));
         const response = await fetch(`${BACKEND_URL}/api/ai/chat`, {
           method: 'POST',
           credentials: 'include',
@@ -114,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return data.response || data.error || 'Maaf, AI tidak mengembalikan jawaban.'; // Mengembalikan balasan dari Groq AI
       } catch (error) {
         console.error('Error memanggil AI:', error);
-        return 'Maaf, terjadi kesalahan saat menghubungkan ke AI.';
+        return error.message || 'Maaf, terjadi kesalahan saat menghubungkan ke AI.';
       }
     }
     
@@ -221,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessage(cleanText || 'Tolong analisis file ini.', 'user', attachments);
 
         // Beri petunjuk visual loading
-        hint.textContent = 'Glint sedang berpikir...';
+        hint.textContent = attachments.length ? 'Mengecilkan attachment lalu membaca...' : 'Glint sedang berpikir...';
 
         // Tampilkan indikator loading sementara untuk jawaban assistant
         const loadingMessage = addMessage('Sedang mengetik...', 'assistant');
@@ -382,12 +425,12 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const file of incoming) {
             if (selectedFiles.length >= MAX_ATTACHMENTS) break;
             if (file.size > MAX_FILE_BYTES) {
-                showToast(`${file.name} lebih besar dari 4 MB`);
+                showToast(`${file.name} lebih besar dari 20 MB`);
                 continue;
             }
             const total = selectedFiles.reduce((sum, item) => sum + item.size, 0) + file.size;
             if (total > MAX_TOTAL_BYTES) {
-                showToast('Total attachment maksimal 4 MB per pesan');
+                showToast('Total file asli maksimal 30 MB per pesan');
                 break;
             }
             if (!selectedFiles.some((item) => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) {
