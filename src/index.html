@@ -140,12 +140,16 @@
                     <form class="composer" id="chatForm">
                         <div class="composer-tools">
                             <button type="button" class="attach-button" aria-label="Lampirkan file" aria-expanded="false" aria-controls="attachPreview">＋</button>
-                            <input type="file" id="attachInput" class="attach-input" accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" />
+                            <input type="file" id="attachInput" class="attach-input" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md,.csv,.json,image/*" />
                             <div class="attach-preview" id="attachPreview" hidden>
-                                <span class="attach-file-name" id="attachFileName"></span>
-                                <button type="button" class="remove-attach" aria-label="Hapus lampiran">×</button>
+                                <div class="attach-preview-top">
+                                    <span><strong>Lampiran</strong> <small id="attachCount">0/6</small></span>
+                                    <button type="button" class="clear-attachments" id="clearAttachments">Hapus semua</button>
+                                </div>
+                                <div class="attachment-list" id="attachmentList"></div>
+                                <p class="attachment-note">PDF, DOCX, PPTX, dan teks akan dibaca seperlunya agar konteks tetap ringan.</p>
                             </div>
-                            <input type="text" class="textBox" placeholder="Login untuk bertanya pada Glint AI..." required disabled />
+                            <textarea class="textBox" placeholder="Login untuk bertanya pada Glint AI..." rows="1" disabled></textarea>
                         </div>
                         <div class="composer-bottom">
                             <span class="shortcut-hint">Enter untuk mengirim · Shift + Enter untuk baris baru</span>
