@@ -14,8 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const attachButton = document.querySelector('.attach-button');
     const attachInput = document.getElementById('attachInput');
     const attachPreview = document.getElementById('attachPreview');
-    const attachFileName = document.getElementById('attachFileName');
-    const removeAttach = document.querySelector('.remove-attach');
+    const attachCount = document.getElementById('attachCount');
+    const attachmentList = document.getElementById('attachmentList');
+    const clearAttachmentsButton = document.getElementById('clearAttachments');
     const authAction = document.getElementById('authAction');
     const topAvatar = document.getElementById('topAvatar');
     const profileName = document.getElementById('profileName');
@@ -26,7 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const composerInput = form.querySelector('.textBox');
     const sendButton = form.querySelector('.send-button');
     let currentUser = null;
-    let selectedFile = null;
+    let selectedFiles = [];
+    const MAX_ATTACHMENTS = 6;
+    const MAX_FILE_BYTES = 4 * 1024 * 1024;
+    const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
 
     const template = document.getElementById('classItemTemplate');
     // Domain Vercel milikmu
@@ -87,15 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // 2. Fungsi Kirim Pesan ke AI (Groq)
-    async function sendChatMessage(userMessage) {
+    async function sendChatMessage(userMessage, attachments = []) {
       try {
+        const formData = new FormData();
+        formData.append('message', userMessage);
+        attachments.forEach((file) => formData.append('attachments', file, file.name));
         const response = await fetch(`${BACKEND_URL}/api/ai/chat`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           credentials: 'include',
-          body: JSON.stringify({ message: userMessage }),
+          body: formData,
         });
     
         if (response.status === 401) {
@@ -107,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     
         const data = await response.json();
-        return data.response; // Mengembalikan balasan dari Groq AI
+        return data.response || data.error || 'Maaf, AI tidak mengembalikan jawaban.'; // Mengembalikan balasan dari Groq AI
       } catch (error) {
         console.error('Error memanggil AI:', error);
         return 'Maaf, terjadi kesalahan saat menghubungkan ke AI.';
@@ -140,29 +144,81 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 2400);
     };
 
-    const addMessage = (text, type = 'user') => {
+    const fileKind = (file) => {
+        const type = file.type || '';
+        const ext = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'file';
+        if (type === 'application/pdf' || ext === 'pdf') return 'PDF';
+        if (['doc', 'docx'].includes(ext)) return 'DOC';
+        if (['ppt', 'pptx'].includes(ext)) return 'PPT';
+        if (type.startsWith('image/')) return 'IMG';
+        return ext.slice(0, 4).toUpperCase();
+    };
+
+    const formatBytes = (bytes) => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const renderAttachmentList = () => {
+        attachmentList.innerHTML = '';
+        selectedFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'attachment-chip';
+            item.innerHTML = `<span class="attachment-type">${fileKind(file)}</span><span class="attachment-meta"><strong></strong><small></small></span><button type="button" aria-label="Hapus ${file.name}">×</button>`;
+            item.querySelector('strong').textContent = file.name;
+            item.querySelector('small').textContent = formatBytes(file.size);
+            item.querySelector('button').addEventListener('click', () => {
+                selectedFiles.splice(index, 1);
+                renderAttachmentList();
+                updateAttachmentPreview();
+            });
+            attachmentList.appendChild(item);
+        });
+    };
+
+    const updateAttachmentPreview = () => {
+        attachCount.textContent = `${selectedFiles.length}/${MAX_ATTACHMENTS}`;
+        attachPreview.hidden = selectedFiles.length === 0;
+        attachPreview.classList.toggle('show', selectedFiles.length > 0);
+        attachButton.setAttribute('aria-expanded', String(selectedFiles.length > 0));
+        renderAttachmentList();
+    };
+
+    const addMessage = (text, type = 'user', attachments = []) => {
         const message = document.createElement('div');
         message.className = 'message ' + type;
         message.innerHTML = type === 'user'
           ? '<div class="bubble"><p></p></div><div class="message-avatar">T</div>'
           : '<div class="message-avatar">✦</div><div class="bubble"><p></p></div>';
         message.querySelector('p').textContent = text;
+        if (attachments.length) {
+            const list = document.createElement('div');
+            list.className = 'message-attachments';
+            attachments.forEach((file) => {
+                const card = document.createElement('span');
+                card.className = 'message-attachment';
+                card.textContent = `${fileKind(file)} · ${file.name}`;
+                list.appendChild(card);
+            });
+            message.querySelector('.bubble').appendChild(list);
+        }
         messages.appendChild(message);
         messages.scrollTop = messages.scrollHeight;
         return message;
     };
 
     // 3. Fungsi Utama Pengiriman Pesan (Async)
-    const sendMessage = async (text) => {
+    const sendMessage = async (text, attachments = []) => {
         if (!currentUser) {
             showToast('Login dengan Google untuk memakai AI');
             return;
         }
         const cleanText = text.trim();
-        if (!cleanText) return;
+        if (!cleanText && !attachments.length) return;
 
         // Tampilkan pesan user ke layar
-        addMessage(cleanText, 'user');
+        addMessage(cleanText || 'Tolong analisis file ini.', 'user', attachments);
 
         // Beri petunjuk visual loading
         hint.textContent = 'Glint sedang berpikir...';
@@ -171,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadingMessage = addMessage('Sedang mengetik...', 'assistant');
 
         // Panggil API Groq
-        const aiResponse = await sendChatMessage(cleanText);
+        const aiResponse = await sendChatMessage(cleanText, attachments);
 
         // Perbarui teks balasan dari indikator loading ke respon asli
         loadingMessage.querySelector('p').textContent = aiResponse;
@@ -180,11 +236,20 @@ document.addEventListener('DOMContentLoaded', () => {
         hint.textContent = 'Tanya apa saja tentang kelasmu...';
     };
 
+    composerInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            form.requestSubmit();
+        }
+    });
+
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const text = form.querySelector('.textBox').value;
-        if (text) sendMessage(text);
-        form.reset();
+        const files = [...selectedFiles];
+        if (text.trim() || files.length) sendMessage(text, files);
+        composerInput.value = '';
+        clearAttachment();
     });
 
     document.querySelectorAll('.quick-actions button').forEach((button) => {
@@ -303,21 +368,33 @@ document.addEventListener('DOMContentLoaded', () => {
         profileMenu.setAttribute('aria-hidden', 'true');
     };
 
-    const showAttachPreview = (file) => {
-        selectedFile = file;
-        attachFileName.textContent = file.name;
-        attachPreview.hidden = false;
-        attachPreview.classList.add('show');
-        attachButton.setAttribute('aria-expanded', 'true');
+    const clearAttachment = () => {
+        selectedFiles = [];
+        attachInput.value = '';
+        updateAttachmentPreview();
     };
 
-    const clearAttachment = () => {
-        selectedFile = null;
-        attachInput.value = '';
-        attachFileName.textContent = '';
-        attachPreview.classList.remove('show');
-        attachPreview.hidden = true;
-        attachButton.setAttribute('aria-expanded', 'false');
+    const addFiles = (fileList) => {
+        const incoming = [...fileList];
+        if (selectedFiles.length + incoming.length > MAX_ATTACHMENTS) {
+            showToast(`Maksimal ${MAX_ATTACHMENTS} file per pesan`);
+        }
+        for (const file of incoming) {
+            if (selectedFiles.length >= MAX_ATTACHMENTS) break;
+            if (file.size > MAX_FILE_BYTES) {
+                showToast(`${file.name} lebih besar dari 4 MB`);
+                continue;
+            }
+            const total = selectedFiles.reduce((sum, item) => sum + item.size, 0) + file.size;
+            if (total > MAX_TOTAL_BYTES) {
+                showToast('Total attachment maksimal 4 MB per pesan');
+                break;
+            }
+            if (!selectedFiles.some((item) => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) {
+                selectedFiles.push(file);
+            }
+        }
+        updateAttachmentPreview();
     };
 
     profileMenuToggle.addEventListener('click', (e) => {
@@ -334,11 +411,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     attachInput.addEventListener('change', () => {
-        const file = attachInput.files && attachInput.files[0];
-        if (file) showAttachPreview(file);
+        if (attachInput.files && attachInput.files.length) addFiles(attachInput.files);
+        attachInput.value = '';
     });
 
-    removeAttach.addEventListener('click', (e) => {
+    clearAttachmentsButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         clearAttachment();
