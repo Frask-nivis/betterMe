@@ -1040,3 +1040,36 @@ a {
 .send-button:disabled { cursor: not-allowed; opacity: .45; }
 .textBox:disabled { cursor: not-allowed; background: transparent; }
 @media (max-width: 480px) { .auth-card { padding: 32px 23px 28px; } .auth-brand { margin-bottom: 28px; } }
+
+
+/* Multi-attachment composer polish */
+.attach-preview {
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+  padding: 11px;
+  background: linear-gradient(135deg, #fbfaff, #f7f8ff);
+  border: 1px solid #e4e2ff;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(47, 56, 93, 0.10);
+}
+.attach-preview.show { display: flex; }
+.attach-preview-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--ink); font-size: 11px; }
+.attach-preview-top small { color: var(--muted); font-weight: 500; }
+.clear-attachments { width: auto !important; height: auto !important; padding: 4px 7px; border: 0 !important; color: #a05a65 !important; background: transparent !important; font-size: 10px !important; }
+.clear-attachments:hover { background: #fff0f1 !important; }
+.attachment-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; max-height: 132px; overflow: auto; }
+.attachment-chip { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 7px; border: 1px solid #e9e8f6; border-radius: 10px; background: #fff; }
+.attachment-type { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; border-radius: 8px; color: var(--purple-dark); background: #eeecff; font-size: 8px; font-weight: 800; }
+.attachment-meta { min-width: 0; flex: 1; }
+.attachment-meta strong, .attachment-meta small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-meta strong { color: #46506d; font-size: 10px; }
+.attachment-meta small { margin-top: 2px; color: #a0a7ba; font-size: 9px; }
+.attachment-chip button { width: 20px !important; height: 20px !important; flex: 0 0 20px; border: 0 !important; color: #a6adbf !important; background: transparent !important; font-size: 15px !important; }
+.attachment-chip button:hover { color: #b74747 !important; background: #fff0ef !important; }
+.attachment-note { margin: 0; color: #a0a7ba; font-size: 9px; line-height: 1.4; }
+.message-attachments { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+.message-attachment { max-width: 190px; overflow: hidden; padding: 5px 7px; border-radius: 7px; color: #6e65df; background: rgba(255,255,255,.18); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.message.assistant .message-attachment { background: #ecebff; }
+@media (max-width: 480px) { .attachment-list { grid-template-columns: 1fr; } }
