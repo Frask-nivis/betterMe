@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="GoalGlint — ruang belajar cerdas untuk fokus, kelas, dan kemajuanmu.">
-    <title>GoalGlint — Your learning workspace</title>
+    <meta name="description" content="GoalGlint â€” ruang belajar cerdas untuk fokus, kelas, dan kemajuanmu.">
+    <title>GoalGlint â€” Your learning workspace</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,23 +16,23 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
                 <a class="brand" href="#" aria-label="GoalGlint home">
-                    <span class="brand-mark">✦</span>
+                    <span class="brand-mark">âœ¦</span>
                     <span>Goal<span>Glint</span></span>
                 </a>
-                <button class="icon-button sidebar-close" id="closeSidebar" aria-label="Tutup sidebar">×</button>
+                <button class="icon-button sidebar-close" id="closeSidebar" aria-label="Tutup sidebar">Ã—</button>
             </div>
             <button class="new-chat" id="newChat">
-                <span>+</span> Chat baru <kbd>⌘ K</kbd>
+                <span>+</span> Chat baru <kbd>âŒ˜ K</kbd>
             </button>
             <nav class="main-nav" aria-label="Navigasi utama">
-                <a class="nav-item active" href="#chat"><span class="nav-icon">⌂</span> Workspace</a>
-                <a class="nav-item" href="#saved"><span class="nav-icon">▱</span> Tersimpan <span class="nav-count">3</span></a>
-                <a class="nav-item" href="#progress"><span class="nav-icon">◒</span> Progress</a>
+                <a class="nav-item active" href="#chat"><span class="nav-icon">âŒ‚</span> Workspace</a>
+                <a class="nav-item" href="#saved"><span class="nav-icon">â–±</span> Tersimpan <span class="nav-count">3</span></a>
+                <a class="nav-item" href="#progress"><span class="nav-icon">â—’</span> Progress</a>
             </nav>
             <div class="class-section">
                 <div class="section-label">
                     <span>KELAS SAYA</span>
-                    <button class="add-class" id="addClass" aria-label="Tambah kelas">＋</button>
+                    <button class="add-class" id="addClass" aria-label="Tambah kelas">ï¼‹</button>
                 </div>
                 <div class="class-list" id="classList">
                 
@@ -41,7 +41,7 @@
                             <span class="class-dot"></span>
                             <span></span>
                             <input type="text" class="rename" value="" style="display: none;" />
-                            <span class="class-more">•••</span>
+                            <span class="class-more">â€¢â€¢â€¢</span>
 
                             <!-- Menu Popup disisipkan di sini -->
                             <div class="popup-menu">
@@ -55,9 +55,9 @@
             </div>
             <div class="sidebar-bottom">
                 <div class="mini-profile" id="miniProfile">
-                    <div class="avatar" id="profileAvatar">Ϙ</div>
+                    <div class="avatar" id="profileAvatar">Ï˜</div>
                     <div><strong id="profileName">Guest</strong><small id="profileStatus">Login untuk memakai AI</small></div>
-                    <button class="icon-button profile-menu-toggle" id="profileMenuToggle" aria-label="Buka menu profil" aria-expanded="false">•••</button>
+                    <button class="icon-button profile-menu-toggle" id="profileMenuToggle" aria-label="Buka menu profil" aria-expanded="false">â€¢â€¢â€¢</button>
                     <div class="popup-menu-mini-profile" id="profileMenu" aria-hidden="true">
                         <a href="#" role="button" tabindex="0" class="action-logout" hidden>Logout</a>
                         <a href="login.html" role="button" tabindex="0" class="login" id="profileLogin">Login Google</a>
@@ -69,11 +69,11 @@
 
         <main class="main-panel" id="chat">
             <header class="topbar">
-                <button class="icon-button menu-button" id="openSidebar" aria-label="Buka sidebar">☰</button>
+                <button class="icon-button menu-button" id="openSidebar" aria-label="Buka sidebar">â˜°</button>
                 <div class="breadcrumb"><span class="muted">Workspace</span><span>/</span><strong id="currentClass">contoh class</strong></div>
                 <div class="top-actions">
-                    <button class="icon-button" aria-label="Cari">⌕</button>
-                    <button class="icon-button" aria-label="Notifikasi">♢</button>
+                    <button class="icon-button" aria-label="Cari">âŒ•</button>
+                    <button class="icon-button" aria-label="Notifikasi">â™¢</button>
                     <a class="auth-action" id="authAction" href="login.html">Login Google</a>
                     <button class="avatar small" id="topAvatar" hidden>G</button>
                 </div>
@@ -86,7 +86,7 @@
                         <h1>What are we learning<br><em>today?</em></h1>
                     </div>
                     <div class="date-card">
-                        <span class="date-icon">◷</span>
+                        <span class="date-icon">â—·</span>
                         <div><small>Fokus hari ini</small><strong>2 jam 30 menit</strong></div>
                     </div>
                 </div>
@@ -95,7 +95,7 @@
                     <div class="stat-card">
                         <span class="stat-label">PROGRESS MINGGU INI</span>
                         <strong id="ProgressInt">0%</strong>
-                        <span class="stat-trend">↗ +12% dari minggu lalu</span>
+                        <span class="stat-trend">â†— +12% dari minggu lalu</span>
                         <div class="progress-bar"><i style="width:0%;"></i></div>
                     </div>
                     <div class="stat-card">
@@ -109,23 +109,23 @@
                     <div class="stat-card accent-card">
                         <span class="stat-label">STREAK TERBAIK</span>
                         <strong>0 <small>hari</small></strong>
-                        <span class="stat-trend">Konsisten itu keren ✦</span>
-                        <div class="streak-spark">╱╲╱╲╱╲╱╲</div>
+                        <span class="stat-trend">Konsisten itu keren âœ¦</span>
+                        <div class="streak-spark">â•±â•²â•±â•²â•±â•²â•±â•²</div>
                     </div>
                 </div>
  
                 <section class="chat-card" aria-label="Chat dengan GoalGlint">
                     <div class="chat-header">
                         <div class="assistant-id">
-                            <div class="assistant-avatar">✦</div>
+                            <div class="assistant-avatar">âœ¦</div>
                             <div><strong>Glint AI</strong><span><i></i> Study companion kamu</span></div>
                         </div>
-                        <button class="more-button" aria-label="Opsi chat">•••</button>
+                        <button class="more-button" aria-label="Opsi chat">â€¢â€¢â€¢</button>
                     </div>
 
                     <div class="messages" id="messages">
                         <div class="message assistant">
-                            <div class="message-avatar">✦</div>
+                            <div class="message-avatar">âœ¦</div>
                             <div class="bubble">
                                 <p>Hai!, Aku siap bantu kamu belajar <strong>contoh class</strong> hari ini. Mau mulai dari mana?</p>
                                 <div class="quick-actions">
@@ -139,7 +139,7 @@
 
                     <form class="composer" id="chatForm">
                         <div class="composer-tools">
-                            <button type="button" class="attach-button" aria-label="Lampirkan file" aria-expanded="false" aria-controls="attachPreview">＋</button>
+                            <button type="button" class="attach-button" aria-label="Lampirkan file" aria-expanded="false" aria-controls="attachPreview">ï¼‹</button>
                             <input type="file" id="attachInput" class="attach-input" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md,.csv,.json,image/*" />
                             <div class="attach-preview" id="attachPreview" hidden>
                                 <div class="attach-preview-top">
@@ -147,19 +147,19 @@
                                     <button type="button" class="clear-attachments" id="clearAttachments">Hapus semua</button>
                                 </div>
                                 <div class="attachment-list" id="attachmentList"></div>
-                                <p class="attachment-note">PDF, DOCX, PPTX, dan teks akan dibaca seperlunya agar konteks tetap ringan.</p>
+                                <p class="attachment-note">File akan dikecilkan otomatis sebelum dikirim. Isi dokumen dibaca seperlunya agar konteks tetap ringan.</p>
                             </div>
                             <textarea class="textBox" placeholder="Login untuk bertanya pada Glint AI..." rows="1" disabled></textarea>
                         </div>
                         <div class="composer-bottom">
-                            <span class="shortcut-hint">Enter untuk mengirim · Shift + Enter untuk baris baru</span>
-                            <button class="send-button" type="submit" aria-label="Kirim pesan" disabled>↑</button>
+                            <span class="shortcut-hint">Enter untuk mengirim Â· Shift + Enter untuk baris baru</span>
+                            <button class="send-button" type="submit" aria-label="Kirim pesan" disabled>â†‘</button>
                         </div>
                     </form>
                     <p class="login-hint" id="loginHint">Login dengan Google untuk menggunakan Glint AI.</p>
                 </section>
 
-                <p class="template-note"><span>✦</span> Ini adalah template interface. Hubungkan endpoint AI pilihanmu untuk membuat Glint benar-benar menjawab.</p>
+                <p class="template-note"><span>âœ¦</span> Ini adalah template interface. Hubungkan endpoint AI pilihanmu untuk membuat Glint benar-benar menjawab.</p>
             </section>
         </main>
     </div>
