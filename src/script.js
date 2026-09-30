@@ -235,9 +235,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const lower = text.toLowerCase(); const actions = []; let item = currentClass();
     const createMatch = text.match(/(?:buat|buatkan|create)\s+(?:class|kelas)(?:\s+(?:untuk|bernama|dengan nama))?\s*[:\-]?\s*(.*)/i);
     if (createMatch && createMatch[1].trim()) { item = createClass(createMatch[1].replace(/[.!?]+$/, '').trim()); actions.push(`Class “${item.name}” siap digunakan.`); }
+    const renameMatch = text.match(/(?:ubah|ganti)\s+nama\s+(?:class|kelas)\s+(.+?)\s+(?:menjadi|jadi|ke)\s+(.+)/i);
+    if (renameMatch) { const target = state.classes.find((entry) => entry.name.toLowerCase().includes(renameMatch[1].trim().toLowerCase())); if (target) { target.name = renameMatch[2].replace(/[.!?]+$/, '').trim(); state.currentClassId = target.id; item = target; persist(); renderAll(); actions.push(`Nama Class diubah menjadi “${target.name}”.`); } }
+    const deleteClassMatch = text.match(/(?:hapus|delete)\s+(?:class|kelas)\s+(.+)/i);
+    if (deleteClassMatch && !renameMatch) { const target = state.classes.find((entry) => entry.name.toLowerCase().includes(deleteClassMatch[1].trim().toLowerCase())); if (target) { state.classes = state.classes.filter((entry) => entry.id !== target.id); state.currentClassId = state.classes[0]?.id || null; persist(); renderAll(); item = currentClass(); actions.push(`Class “${target.name}” dihapus.`); } }
     const openMatch = text.match(/(?:buka|open|pindah(?:kan)? ke|gunakan)\s+(?:class|kelas)?\s*[:\-]?\s*(.*)/i);
-    if (openMatch && openMatch[1].trim() && !createMatch) { const target = state.classes.find((entry) => entry.name.toLowerCase().includes(openMatch[1].trim().toLowerCase())); if (target) { navigateToClass(target.id); item = target; actions.push(`Membuka Class “${target.name}”.`); } }
+    if (openMatch && openMatch[1].trim() && !createMatch && !renameMatch && !deleteClassMatch) { const target = state.classes.find((entry) => entry.name.toLowerCase().includes(openMatch[1].trim().toLowerCase())); if (target) { navigateToClass(target.id); item = target; actions.push(`Membuka Class “${target.name}”.`); } }
     if (/(?:tampilkan|lihat|baca|show).*(?:isi|konten|dokumen|materi)/i.test(text) && item) { navigateToClass(item.id, false); actions.push(`Menampilkan isi Class “${item.name}”.`); }
+    const deleteDocumentMatch = text.match(/(?:hapus|delete)\s+(?:dokumen|file|materi)\s+(.+)/i);
+    if (deleteDocumentMatch && item) { const target = item.documents.find((entry) => entry.name.toLowerCase().includes(deleteDocumentMatch[1].trim().toLowerCase())); if (target) { removeDocument(item, target.id); actions.push(`Dokumen “${target.name}” dihapus dari “${item.name}”.`); } }
+    const taskMatch = text.match(/(?:tambah|buat|catat)\s+(?:tugas|task)\s*[:\-]?\s*(.*)/i);
+    if (taskMatch && item) { const title = taskMatch[1].trim() || 'Tugas baru'; item.tasks.push({ id: uid('task'), title, createdAt: new Date().toISOString() }); persist(); renderAll(); actions.push(`Tugas “${title}” ditambahkan ke “${item.name}”.`); }
+    if (/(?:organisasi|organisir|rapikan|susun).*(?:materi|dokumen|class|kelas)/i.test(text) && item) { item.documents.sort((a, b) => a.name.localeCompare(b.name)); item.materials.sort((a, b) => (a.title || '').localeCompare(b.title || '')); persist(); renderAll(); actions.push(`Materi di “${item.name}” dirapikan berdasarkan nama.`); }
     if (/(?:tambah|buat).*(?:catatan|note)/i.test(text) && item) { const note = text.replace(/.*(?:catatan|note)\s*[:\-]?/i, '').trim() || 'Catatan baru'; item.materials.push({ id: uid('material'), title: note, createdAt: new Date().toISOString() }); persist(); renderAll(); actions.push(`Catatan ditambahkan ke “${item.name}”.`); }
     if (lower.includes('ke homepage') || lower.includes('global chat')) { state.currentClassId = null; persist(); renderAll(); actions.push('Kembali ke Global chat.'); }
     return actions;
