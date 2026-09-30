@@ -35,6 +35,40 @@ document.addEventListener('DOMContentLoaded', () => {
   let pendingUploadClassId = null;
   let activeDocumentId = null;
   const runtimeFiles = new Map();
+  const fileStore = {
+    dbPromise: null,
+    open() {
+      if (this.dbPromise) return this.dbPromise;
+      if (!('indexedDB' in window)) return Promise.resolve(null);
+      this.dbPromise = new Promise((resolve) => {
+        const request = indexedDB.open('goalglint-workspace-files', 1);
+        request.onupgradeneeded = () => request.result.createObjectStore('files', { keyPath: 'id' });
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => resolve(null);
+      });
+      return this.dbPromise;
+    },
+    save(id, file) {
+      return this.open().then((db) => new Promise((resolve) => {
+        if (!db) return resolve(false);
+        const transaction = db.transaction('files', 'readwrite');
+        transaction.objectStore('files').put({ id, file });
+        transaction.oncomplete = () => resolve(true);
+        transaction.onerror = () => resolve(false);
+      }));
+    },
+    get(id) {
+      return this.open().then((db) => new Promise((resolve) => {
+        if (!db) return resolve(null);
+        const request = db.transaction('files', 'readonly').objectStore('files').get(id);
+        request.onsuccess = () => resolve(request.result?.file || null);
+        request.onerror = () => resolve(null);
+      }));
+    },
+    remove(id) {
+      return this.open().then((db) => { if (db) db.transaction('files', 'readwrite').objectStore('files').delete(id); });
+    }
+  };
 
   const defaultState = () => ({ classes: [], currentClassId: null, messages: [] });
   let state;
@@ -85,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
       classItem.documents.push(doc);
       classItem.materials.push({ id: uid('material'), title: file.name, sourceDocumentId: doc.id, createdAt: doc.addedAt });
       runtimeFiles.set(doc.id, file);
+      fileStore.save(doc.id, file);
     });
     state.currentClassId = classItem.id;
     pendingUploadClassId = null;
@@ -98,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     classItem.documents = classItem.documents.filter((item) => item.id !== documentId);
     classItem.materials = classItem.materials.filter((item) => item.sourceDocumentId !== documentId);
     runtimeFiles.delete(documentId);
+    fileStore.remove(documentId);
     if (activeDocumentId === documentId) activeDocumentId = null;
     persist(); renderAll(); showToast(doc ? `Dokumen “${doc.name}” dihapus` : 'Dokumen dihapus');
   };
@@ -160,7 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const openDocument = async (documentId) => {
     const item = currentClass(); const doc = item?.documents.find((entry) => entry.id === documentId); if (!doc) return;
     activeDocumentId = doc.id; $('#viewerTitle').textContent = doc.name; const stage = $('#viewerStage'); stage.innerHTML = '';
-    const file = runtimeFiles.get(doc.id); const ext = doc.name.split('.').pop().toLowerCase();
+    const file = runtimeFiles.get(doc.id) || await fileStore.get(doc.id); if (file) runtimeFiles.set(doc.id, file);
+    const ext = doc.name.split('.').pop().toLowerCase();
     if (!file) { stage.innerHTML = '<div class="viewer-empty"><span>◌</span><strong>Dokumen tersedia setelah dibuka ulang</strong><p>Metadata Class tersimpan. Unggah ulang file ini untuk melihat preview lokal.</p></div>'; return; }
     const url = URL.createObjectURL(file); stage.dataset.objectUrl = url;
     if (doc.kind === 'PDF') { const frame = document.createElement('iframe'); frame.title = `Preview ${doc.name}`; frame.src = url; stage.appendChild(frame); }
