@@ -234,9 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const applyAgentActions = (actions) => {
     const notices = [];
+    const findActionClass = (action) => state.classes.find((entry) => entry.id === action.classId || (action.className && entry.name.toLowerCase().includes(String(action.className).toLowerCase()))) || currentClass();
     for (const action of Array.isArray(actions) ? actions : []) {
       if (!action || !AGENT_ACTIONS.includes(action.type)) continue;
-      let item = action.classId ? state.classes.find((entry) => entry.id === action.classId) : currentClass();
+      let item = findActionClass(action);
       if (action.type === 'create_class' && action.name) { item = createClass(action.name, { description: action.description }); notices.push(`Class “${item.name}” dibuat.`); }
       if (action.type === 'open_class') { const target = state.classes.find((entry) => entry.id === action.classId || entry.name.toLowerCase().includes(String(action.name || '').toLowerCase())); if (target) { navigateToClass(target.id); item = target; notices.push(`Membuka Class “${target.name}”.`); } }
       if (action.type === 'rename_class' && item && action.name) { item.name = String(action.name).trim(); persist(); renderAll(); notices.push(`Nama Class diubah menjadi “${item.name}”.`); }
