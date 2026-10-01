@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hint = $('.shortcut-hint');
   const sidebar = $('#sidebar');
   const toast = $('#toast');
+  const contentWrap = $('.content-wrap');
   const classList = $('#classList');
   const template = $('#classItemTemplate');
   const attachInput = $('#attachInput');
@@ -186,7 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const renderWorkspace = () => {
     const item = currentClass(); const workspace = $('#classWorkspace');
-    workspace.hidden = !item; currentClassLabel.textContent = item ? item.name : 'Global chat'; $('#contextStat').textContent = item ? 'Class' : 'Global'; $('#contextStripText').textContent = item ? `Class aktif · ${item.name} · ${item.documents.length} dokumen` : 'Global chat · belum memilih Class';
+    workspace.hidden = !item;
+    contentWrap.classList.toggle('document-mode', Boolean(activeDocumentId && item));
+    workspace.classList.toggle('document-focused', Boolean(activeDocumentId && item)); currentClassLabel.textContent = item ? item.name : 'Global chat'; $('#contextStat').textContent = item ? 'Class' : 'Global'; $('#contextStripText').textContent = item ? `Class aktif · ${item.name} · ${item.documents.length} dokumen` : 'Global chat · belum memilih Class';
     if (!item) { $('#classStat').textContent = String(state.classes.length); $('#documentStat').textContent = String(totalDocuments()); $('#contextJump').textContent = 'Buka Class'; return; }
     $('#workspaceTitle').textContent = item.name; $('#workspaceDescription').textContent = item.description; $('#classStat').textContent = String(state.classes.length); $('#documentStat').textContent = String(totalDocuments()); $('#documentBadge').textContent = `${item.documents.length} dokumen`; $('#contextJump').textContent = 'Lihat Class';
     $('#classProgressBar').style.width = `${Math.min(100, item.documents.length ? 20 + item.materials.length * 10 : 8)}%`;
@@ -212,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openDocument = async (documentId) => {
     const item = currentClass(); const doc = item?.documents.find((entry) => entry.id === documentId); if (!doc) return;
-    activeDocumentId = doc.id; $('#viewerTitle').textContent = doc.name; const stage = $('#viewerStage'); stage.innerHTML = '';
+    activeDocumentId = doc.id; renderWorkspace(); $('#viewerTitle').textContent = doc.name; const stage = $('#viewerStage'); stage.innerHTML = '';
     const file = runtimeFiles.get(doc.id) || await fileStore.get(doc.id); if (file) runtimeFiles.set(doc.id, file);
     const ext = doc.name.split('.').pop().toLowerCase();
     if (!file) { stage.innerHTML = '<div class="viewer-empty"><span>◌</span><strong>Dokumen tersedia setelah dibuka ulang</strong><p>Metadata Class tersimpan. Unggah ulang file ini untuk melihat preview lokal.</p></div>'; return; }
@@ -323,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#addNoteButton').addEventListener('click', () => { const item = currentClass(); if (!item) return; const note = window.prompt('Isi catatan untuk Class ini'); if (note?.trim()) { item.materials.push({ id: uid('material'), title: note.trim(), createdAt: new Date().toISOString() }); persist(); renderAll(); showToast('Catatan ditambahkan'); } });
   $('#focusClassButton').addEventListener('click', () => currentClass() && showToast(`AI sekarang memakai “${currentClass().name}” sebagai konteks`));
   $('#contextJump').addEventListener('click', () => currentClass() ? $('#classWorkspace').scrollIntoView({ behavior: 'smooth' }) : (state.classes[0] ? navigateToClass(state.classes[0].id) : showToast('Belum ada Class')));
-  $('#closeViewer').addEventListener('click', () => { activeDocumentId = null; $('#viewerTitle').textContent = 'Pilih dokumen'; $('#viewerStage').innerHTML = '<div class="viewer-empty"><span>▣</span><strong>Belum ada dokumen dibuka</strong><p>Pilih materi dari daftar Class untuk melihatnya di sini.</p></div>'; });
+  $('#closeViewer').addEventListener('click', () => { activeDocumentId = null; renderWorkspace(); $('#viewerTitle').textContent = 'Pilih dokumen'; $('#viewerStage').innerHTML = '<div class="viewer-empty"><span>▣</span><strong>Belum ada dokumen dibuka</strong><p>Pilih materi dari daftar Class untuk melihatnya di sini.</p></div>'; });
   document.querySelectorAll('.content-tab').forEach((tab) => tab.addEventListener('click', () => { document.querySelectorAll('.content-tab').forEach((entry) => entry.classList.remove('active')); tab.classList.add('active'); renderClassItems(tab.dataset.contentTab); }));
   $('#openSidebar').addEventListener('click', () => sidebar.classList.add('open')); $('#closeSidebar').addEventListener('click', () => sidebar.classList.remove('open')); document.addEventListener('keydown', (event) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); $('#newChat').click(); } if (event.key === 'Escape') sidebar.classList.remove('open'); });
   profileMenuToggle.addEventListener('click', (event) => { event.stopPropagation(); const open = profileMenu.classList.toggle('show'); profileMenuToggle.setAttribute('aria-expanded', String(open)); profileMenu.setAttribute('aria-hidden', String(!open)); }); profileLogout.addEventListener('click', logout); authAction.addEventListener('click', (event) => { if (currentUser) { event.preventDefault(); logout(); } }); window.addEventListener('click', (event) => { if (!event.target.closest('.mini-profile')) profileMenu.classList.remove('show'); document.querySelectorAll('.popup-menu.show').forEach((menu) => menu.classList.remove('show')); });
