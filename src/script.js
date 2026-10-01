@@ -95,6 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const createClass = (name, options = {}) => {
     const cleanName = escapeText(name) || 'Workspace Baru';
+    const existing = state.classes.find((entry) => entry.name.toLowerCase() === cleanName.toLowerCase());
+    if (existing) { state.currentClassId = existing.id; persist(); renderAll(); return existing; }
     const item = { id: uid('class'), name: cleanName, color: options.color || colors[state.classes.length % colors.length], description: options.description || 'Dokumen, materi, tugas, dan konteks AI untuk Class ini.', createdAt: new Date().toISOString(), documents: [], materials: [], tasks: [] };
     state.classes.push(item);
     state.currentClassId = item.id;
