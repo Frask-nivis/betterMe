@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hint = $('.shortcut-hint');
   const sidebar = $('#sidebar');
   const toast = $('#toast');
+  const contentWrap = $('.content-wrap');
   const classList = $('#classList');
   const template = $('#classItemTemplate');
   const attachInput = $('#attachInput');
@@ -36,6 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let pendingUploadClassId = null;
   let activeDocumentId = null;
   const runtimeFiles = new Map();
+  let storageUserSub = '';
+  let workspaceReady = false;
+  let remoteSaveTimer = null;
+  let remoteStorageWarningShown = false;
+  const scopedFileKey = (id) => `${storageUserSub || 'guest'}:${id}`;
   const fileStore = {
     dbPromise: null,
     open() {
@@ -53,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return this.open().then((db) => new Promise((resolve) => {
         if (!db) return resolve(false);
         const transaction = db.transaction('files', 'readwrite');
-        transaction.objectStore('files').put({ id, file });
+        transaction.objectStore('files').put({ id: scopedFileKey(id), file });
         transaction.oncomplete = () => resolve(true);
         transaction.onerror = () => resolve(false);
       }));
@@ -61,23 +67,76 @@ document.addEventListener('DOMContentLoaded', () => {
     get(id) {
       return this.open().then((db) => new Promise((resolve) => {
         if (!db) return resolve(null);
-        const request = db.transaction('files', 'readonly').objectStore('files').get(id);
-        request.onsuccess = () => resolve(request.result?.file || null);
+        const store = db.transaction('files', 'readonly').objectStore('files');
+        const request = store.get(scopedFileKey(id));
+        request.onsuccess = () => {
+          if (request.result?.file) return resolve(request.result.file);
+          if (localStorage.getItem(`${STORAGE_KEY}.legacyOwner`) !== storageUserSub) return resolve(null);
+          const legacyRequest = store.get(id);
+          legacyRequest.onsuccess = () => { const file = legacyRequest.result?.file || null; if (file) this.save(id, file); resolve(file); };
+          legacyRequest.onerror = () => resolve(null);
+        };
         request.onerror = () => resolve(null);
       }));
     },
     remove(id) {
-      return this.open().then((db) => { if (db) db.transaction('files', 'readwrite').objectStore('files').delete(id); });
+      return this.open().then((db) => { if (db) db.transaction('files', 'readwrite').objectStore('files').delete(scopedFileKey(id)); });
     }
   };
 
   const defaultState = () => ({ classes: [], currentClassId: null, messages: [] });
-  let state;
-  try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState(); } catch (_) { state = defaultState(); }
-  state.classes = Array.isArray(state.classes) ? state.classes : [];
-  state.messages = Array.isArray(state.messages) ? state.messages : [];
+  let state = defaultState();
+  const localStateKey = () => storageUserSub ? `${STORAGE_KEY}:${storageUserSub}` : null;
+  const saveLocalState = () => { const key = localStateKey(); if (key) localStorage.setItem(key, JSON.stringify(state)); };
+  const scheduleRemoteSave = () => {
+    if (!workspaceReady || !storageUserSub) return;
+    clearTimeout(remoteSaveTimer);
+    remoteSaveTimer = setTimeout(async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/workspace`, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state }) });
+        if (!response.ok && !remoteStorageWarningShown) { remoteStorageWarningShown = true; showToast('Workspace tersimpan lokal; sinkronisasi server belum tersedia.'); }
+      } catch (_) { if (!remoteStorageWarningShown) { remoteStorageWarningShown = true; showToast('Workspace tersimpan lokal; server belum dapat dijangkau.'); } }
+    }, 450);
+  };
+  const persist = () => { saveLocalState(); scheduleRemoteSave(); };
+  const normalizeState = (value) => { const source = value && typeof value === 'object' ? value : defaultState(); return { classes: Array.isArray(source.classes) ? source.classes : [], currentClassId: source.currentClassId || null, messages: Array.isArray(source.messages) ? source.messages.slice(-80) : [] }; };
+  const loadLocalState = (userSub) => {
+    storageUserSub = userSub || '';
+    if (!storageUserSub) { state = defaultState(); return; }
+    try {
+      const scoped = localStorage.getItem(localStateKey());
+      if (scoped) { state = normalizeState(JSON.parse(scoped)); return; }
+      const legacy = localStorage.getItem(STORAGE_KEY);
+      const legacyOwner = localStorage.getItem(`${STORAGE_KEY}.legacyOwner`);
+      if (legacy && (!legacyOwner || legacyOwner === storageUserSub)) {
+        state = normalizeState(JSON.parse(legacy));
+        saveLocalState();
+        localStorage.setItem(`${STORAGE_KEY}.legacyOwner`, storageUserSub);
+        return;
+      }
+    } catch (_) {}
+    state = defaultState();
+  };
 
-  const persist = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const hydrateWorkspace = async (user) => {
+    loadLocalState(user?.sub);
+    const localBeforeSync = normalizeState(state);
+    let shouldSeedRemote = false;
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/workspace`, { credentials: 'include' });
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload.updated && payload.state) { state = normalizeState(payload.state); saveLocalState(); }
+        else if (!payload.updated && (localBeforeSync.classes.length || localBeforeSync.messages.length)) { state = localBeforeSync; shouldSeedRemote = true; }
+      } else if (response.status !== 503) {
+        throw new Error('workspace load failed');
+      }
+    } catch (_) {
+      if (!remoteStorageWarningShown) { remoteStorageWarningShown = true; showToast('Workspace server belum tersedia; memakai cache akun di browser.'); }
+    }
+    workspaceReady = true;
+    if (shouldSeedRemote) scheduleRemoteSave();
+  };
   const uid = (prefix) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   const escapeText = (value) => String(value || '').trim();
   const showToast = (message) => { toast.textContent = message; toast.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove('show'), 2600); };
@@ -172,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const list = tab === 'documents' ? item.documents : tab === 'materials' ? item.materials : item.tasks;
     if (!list.length) { container.innerHTML = `<div class="content-empty">Belum ada ${tab === 'documents' ? 'dokumen' : tab === 'materials' ? 'materi' : 'tugas'} di Class ini.</div>`; return; }
     list.forEach((entry) => {
-      const sourceDoc = entry.sourceDocumentId ? item.documents.find((doc) => doc.id === entry.sourceDocumentId) : null;
+      const sourceDoc = tab === 'documents' ? entry : (entry.sourceDocumentId ? item.documents.find((doc) => doc.id === entry.sourceDocumentId) : null);
       const row = document.createElement('div'); row.className = 'class-content-item';
       const button = document.createElement('button'); button.type = 'button'; button.className = 'content-item-main';
       button.innerHTML = `<span class="content-item-icon">${sourceDoc?.kind || (tab === 'tasks' ? '✓' : '✦')}</span><span><strong></strong><small>${sourceDoc ? `${sourceDoc.kind} · ${formatBytes(sourceDoc.size)}` : tab === 'tasks' ? 'Tugas Class' : 'Catatan materi'}</small></span>`;
@@ -186,7 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const renderWorkspace = () => {
     const item = currentClass(); const workspace = $('#classWorkspace');
-    workspace.hidden = !item; currentClassLabel.textContent = item ? item.name : 'Global chat'; $('#contextStat').textContent = item ? 'Class' : 'Global'; $('#contextStripText').textContent = item ? `Class aktif · ${item.name} · ${item.documents.length} dokumen` : 'Global chat · belum memilih Class';
+    workspace.hidden = !item;
+    contentWrap.classList.toggle('document-mode', Boolean(activeDocumentId && item));
+    workspace.classList.toggle('document-focused', Boolean(activeDocumentId && item)); currentClassLabel.textContent = item ? item.name : 'Global chat'; $('#contextStat').textContent = item ? 'Class' : 'Global'; $('#contextStripText').textContent = item ? `Class aktif · ${item.name} · ${item.documents.length} dokumen` : 'Global chat · belum memilih Class';
     if (!item) { $('#classStat').textContent = String(state.classes.length); $('#documentStat').textContent = String(totalDocuments()); $('#contextJump').textContent = 'Buka Class'; return; }
     $('#workspaceTitle').textContent = item.name; $('#workspaceDescription').textContent = item.description; $('#classStat').textContent = String(state.classes.length); $('#documentStat').textContent = String(totalDocuments()); $('#documentBadge').textContent = `${item.documents.length} dokumen`; $('#contextJump').textContent = 'Lihat Class';
     $('#classProgressBar').style.width = `${Math.min(100, item.documents.length ? 20 + item.materials.length * 10 : 8)}%`;
@@ -196,9 +257,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const renderStats = () => { $('#savedCount').textContent = String(state.classes.reduce((sum, item) => sum + item.materials.length, 0)); $('#documentDots').innerHTML = Array.from({ length: 7 }, (_, index) => `<i class="${index < Math.min(7, totalDocuments()) ? 'done' : 'none'}"></i>`).join(''); };
   const renderAll = () => { renderSidebar(); renderWorkspace(); renderStats(); };
 
+
+  const xmlNodes = (root, localName) => root ? Array.from(root.getElementsByTagName('*')).filter((node) => node.localName === localName) : [];
+  const xmlAttr = (node, localName) => { if (!node) return ''; const direct = node.getAttribute(localName); if (direct !== null) return direct; const attr = Array.from(node.attributes || []).find((entry) => entry.localName === localName); return attr ? attr.value : ''; };
+  const officePath = (baseDir, target) => { const parts = (baseDir + '/' + target).replace(/\\/g, '/').split('/'); const output = []; parts.forEach((part) => { if (!part || part === '.') return; if (part === '..') output.pop(); else output.push(part); }); return output.join('/'); };
+  let officeLibraryPromise = null;
+  const officeZip = async (file) => { if (!window.JSZip) { if (!officeLibraryPromise) officeLibraryPromise = new Promise((resolve, reject) => { const library = document.createElement('script'); library.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'; library.onload = () => window.JSZip ? resolve() : reject(new Error('Library preview Office belum tersedia.')); library.onerror = () => reject(new Error('Library preview Office gagal dimuat.')); document.head.appendChild(library); }); await officeLibraryPromise; } if (!window.JSZip) throw new Error('Library preview Office belum tersedia.'); return window.JSZip.loadAsync(file); };
+  const officeXml = async (zip, path) => { const entry = zip.file(path); return entry ? new DOMParser().parseFromString(await entry.async('text'), 'application/xml') : null; };
+  const officeRels = (doc, baseDir) => { const map = new Map(); xmlNodes(doc, 'Relationship').forEach((rel) => { const id = xmlAttr(rel, 'Id'); const target = xmlAttr(rel, 'Target'); if (id && target) map.set(id, officePath(baseDir, target)); }); return map; };
+  const officeShell = (stage, kind, title, subtitle) => { stage.innerHTML = ''; const shell = document.createElement('div'); shell.className = 'office-viewer'; const head = document.createElement('div'); head.className = 'office-viewer-head'; const badge = document.createElement('span'); badge.className = 'office-viewer-badge'; badge.textContent = kind; const copy = document.createElement('div'); copy.className = 'office-viewer-copy'; const heading = document.createElement('strong'); heading.textContent = title; const caption = document.createElement('small'); caption.textContent = subtitle; copy.append(heading, caption); head.append(badge, copy); shell.appendChild(head); const body = document.createElement('div'); body.className = 'office-viewer-body'; shell.appendChild(body); stage.appendChild(shell); return body; };
+  const renderPptx = async (file, stage) => { const zip = await officeZip(file); const presentation = await officeXml(zip, 'ppt/presentation.xml'); const relDoc = await officeXml(zip, 'ppt/_rels/presentation.xml.rels'); if (!presentation || !relDoc) throw new Error('Struktur slide PPTX tidak valid.'); const rels = officeRels(relDoc, 'ppt'); const body = officeShell(stage, 'PPTX', file.name, 'Preview slide lokal · file tetap tersimpan di Class'); const slides = xmlNodes(presentation, 'sldId').map((node) => rels.get(xmlAttr(node, 'r:id') || xmlAttr(node, 'id'))).filter((path) => path && path.includes('/slides/slide')); if (!slides.length) throw new Error('Tidak ada slide yang dapat dibaca.'); for (let index = 0; index < slides.length; index += 1) { const slide = await officeXml(zip, slides[index]); if (!slide) continue; const card = document.createElement('article'); card.className = 'office-slide'; const number = document.createElement('span'); number.className = 'office-slide-number'; number.textContent = String(index + 1).padStart(2, '0'); const content = document.createElement('div'); content.className = 'office-slide-content'; const shapes = xmlNodes(slide, 'sp'); const blocks = shapes.map((shape) => xmlNodes(shape, 't').map((node) => node.textContent || '').join('')).filter(Boolean); if (!blocks.length) blocks.push(xmlNodes(slide, 't').map((node) => node.textContent || '').join(' ')); blocks.filter(Boolean).forEach((text, blockIndex) => { const paragraph = document.createElement(blockIndex === 0 ? 'h4' : 'p'); paragraph.textContent = text; content.appendChild(paragraph); }); card.append(number, content); body.appendChild(card); } };
+  const renderDocx = async (file, stage) => { const zip = await officeZip(file); const documentXml = await officeXml(zip, 'word/document.xml'); if (!documentXml) throw new Error('Struktur DOCX tidak valid.'); const body = officeShell(stage, 'DOCX', file.name, 'Preview dokumen lokal · teks dan tabel utama'); const documentBody = xmlNodes(documentXml, 'body')[0]; if (!documentBody) throw new Error('Isi DOCX kosong.'); Array.from(documentBody.children).forEach((node) => { if (node.localName === 'tbl') { const table = document.createElement('table'); table.className = 'office-table'; xmlNodes(node, 'tr').forEach((row, rowIndex) => { const tr = document.createElement('tr'); xmlNodes(row, 'tc').forEach((cell) => { const td = document.createElement(rowIndex === 0 ? 'th' : 'td'); td.textContent = xmlNodes(cell, 't').map((text) => text.textContent || '').join(''); tr.appendChild(td); }); table.appendChild(tr); }); body.appendChild(table); } else if (node.localName === 'p') { const text = xmlNodes(node, 't').map((part) => part.textContent || '').join(''); if (!text.trim()) return; const style = xmlNodes(node, 'pStyle')[0]; const paragraph = document.createElement(style && /title|heading/i.test(xmlAttr(style, 'val')) ? 'h4' : 'p'); paragraph.textContent = text; body.appendChild(paragraph); } }); };
+  const sheetColumnIndex = (reference) => { const letters = String(reference || '').replace(/\d/g, '').toUpperCase(); let index = 0; for (const letter of letters) index = index * 26 + letter.charCodeAt(0) - 64; return Math.max(0, index - 1); };
+  const renderXlsx = async (file, stage) => { const zip = await officeZip(file); const workbook = await officeXml(zip, 'xl/workbook.xml'); const workbookRels = await officeXml(zip, 'xl/_rels/workbook.xml.rels'); if (!workbook || !workbookRels) throw new Error('Struktur XLSX tidak valid.'); const rels = officeRels(workbookRels, 'xl'); const sharedXml = await officeXml(zip, 'xl/sharedStrings.xml'); const shared = sharedXml ? xmlNodes(sharedXml, 'si').map((item) => xmlNodes(item, 't').map((part) => part.textContent || '').join('')) : []; const body = officeShell(stage, 'XLSX', file.name, 'Preview spreadsheet lokal · pilih sheet untuk membaca tabel'); const tabs = document.createElement('div'); tabs.className = 'office-sheet-tabs'; const panel = document.createElement('div'); panel.className = 'office-sheet-panel'; body.append(tabs, panel); const sheets = xmlNodes(workbook, 'sheet'); const renderSheet = async (sheet, button) => { tabs.querySelectorAll('button').forEach((tab) => tab.classList.remove('active')); button.classList.add('active'); panel.innerHTML = ''; const path = rels.get(xmlAttr(sheet, 'id')); const sheetXml = path ? await officeXml(zip, path) : null; const rows = sheetXml ? xmlNodes(sheetXml, 'row').slice(0, 200) : []; const table = document.createElement('table'); table.className = 'office-table office-spreadsheet'; let maxColumns = 0; const matrix = []; rows.forEach((row) => { const cells = []; xmlNodes(row, 'c').forEach((cell) => { const col = sheetColumnIndex(xmlAttr(cell, 'r')); const type = xmlAttr(cell, 't'); const valueNode = xmlNodes(cell, type === 'inlineStr' ? 't' : 'v')[0]; let value = valueNode ? valueNode.textContent || '' : ''; if (type === 's') value = shared[Number(value)] || value; cells[col] = value; maxColumns = Math.max(maxColumns, col + 1); }); matrix.push(cells); }); matrix.forEach((row, rowIndex) => { const tr = document.createElement('tr'); for (let col = 0; col < Math.min(maxColumns, 40); col += 1) { const cell = document.createElement(rowIndex === 0 ? 'th' : 'td'); cell.textContent = row[col] || ''; tr.appendChild(cell); } table.appendChild(tr); }); panel.appendChild(table); if (!matrix.length) panel.innerHTML = '<div class="office-empty">Sheet ini belum memiliki data yang dapat ditampilkan.</div>'; }; sheets.forEach((sheet, index) => { const button = document.createElement('button'); button.type = 'button'; button.textContent = xmlAttr(sheet, 'name') || 'Sheet ' + (index + 1); button.addEventListener('click', () => renderSheet(sheet, button)); tabs.appendChild(button); if (index === 0) renderSheet(sheet, button); }); };
+  const renderOfficePreview = async (file, ext, stage) => { if (ext === 'pptx') return renderPptx(file, stage); if (ext === 'docx') return renderDocx(file, stage); if (ext === 'xlsx') return renderXlsx(file, stage); throw new Error('Format Office belum didukung untuk preview.'); };
+
   const openDocument = async (documentId) => {
     const item = currentClass(); const doc = item?.documents.find((entry) => entry.id === documentId); if (!doc) return;
-    activeDocumentId = doc.id; $('#viewerTitle').textContent = doc.name; const stage = $('#viewerStage'); stage.innerHTML = '';
+    activeDocumentId = doc.id; renderWorkspace(); $('#viewerTitle').textContent = doc.name; const stage = $('#viewerStage'); stage.innerHTML = '';
     const file = runtimeFiles.get(doc.id) || await fileStore.get(doc.id); if (file) runtimeFiles.set(doc.id, file);
     const ext = doc.name.split('.').pop().toLowerCase();
     if (!file) { stage.innerHTML = '<div class="viewer-empty"><span>◌</span><strong>Dokumen tersedia setelah dibuka ulang</strong><p>Metadata Class tersimpan. Unggah ulang file ini untuk melihat preview lokal.</p></div>'; return; }
@@ -206,7 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (doc.kind === 'PDF') { const frame = document.createElement('iframe'); frame.title = `Preview ${doc.name}`; frame.src = url; stage.appendChild(frame); }
     else if (file.type.startsWith('image/')) { const image = document.createElement('img'); image.alt = doc.name; image.src = url; stage.appendChild(image); }
     else if (['txt', 'md', 'csv', 'json'].includes(ext)) { const pre = document.createElement('pre'); pre.textContent = await file.text(); stage.appendChild(pre); }
-    else { stage.innerHTML = `<div class="viewer-empty"><span>${doc.kind}</span><strong>Preview native belum tersedia untuk ${doc.kind}</strong><p>File tetap tersimpan sebagai materi Class dan bisa diunduh dari browser.</p></div>`; const link = document.createElement('a'); link.className = 'outline-button viewer-download'; link.href = url; link.download = doc.name; link.textContent = 'Unduh dokumen'; stage.appendChild(link); }
+    else if (['pptx', 'docx', 'xlsx'].includes(ext)) { stage.innerHTML = '<div class="viewer-empty"><span>◌</span><strong>Menyiapkan preview Office…</strong><p>File dibaca lokal di browser.</p></div>'; try { await renderOfficePreview(file, ext, stage); } catch (error) { stage.innerHTML = '<div class="viewer-empty"><span>' + doc.kind + '</span><strong>Preview Office gagal disiapkan</strong><p>' + (error.message || 'File tetap dapat diunduh dari browser.') + '</p></div>'; } const link = document.createElement('a'); link.className = 'outline-button viewer-download'; link.href = url; link.download = doc.name; link.textContent = 'Unduh dokumen'; stage.appendChild(link); }
+    else { stage.innerHTML = '<div class="viewer-empty"><span>' + doc.kind + '</span><strong>Preview native belum tersedia untuk ' + doc.kind + '</strong><p>File tetap tersimpan sebagai materi Class dan bisa diunduh dari browser.</p></div>'; const link = document.createElement('a'); link.className = 'outline-button viewer-download'; link.href = url; link.download = doc.name; link.textContent = 'Unduh dokumen'; stage.appendChild(link); }
   };
 
   const addMessage = (text, type = 'user', attachments = [], persistMessage = true) => {
@@ -308,13 +385,21 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#addNoteButton').addEventListener('click', () => { const item = currentClass(); if (!item) return; const note = window.prompt('Isi catatan untuk Class ini'); if (note?.trim()) { item.materials.push({ id: uid('material'), title: note.trim(), createdAt: new Date().toISOString() }); persist(); renderAll(); showToast('Catatan ditambahkan'); } });
   $('#focusClassButton').addEventListener('click', () => currentClass() && showToast(`AI sekarang memakai “${currentClass().name}” sebagai konteks`));
   $('#contextJump').addEventListener('click', () => currentClass() ? $('#classWorkspace').scrollIntoView({ behavior: 'smooth' }) : (state.classes[0] ? navigateToClass(state.classes[0].id) : showToast('Belum ada Class')));
-  $('#closeViewer').addEventListener('click', () => { activeDocumentId = null; $('#viewerTitle').textContent = 'Pilih dokumen'; $('#viewerStage').innerHTML = '<div class="viewer-empty"><span>▣</span><strong>Belum ada dokumen dibuka</strong><p>Pilih materi dari daftar Class untuk melihatnya di sini.</p></div>'; });
+  $('#closeViewer').addEventListener('click', () => { activeDocumentId = null; renderWorkspace(); $('#viewerTitle').textContent = 'Pilih dokumen'; $('#viewerStage').innerHTML = '<div class="viewer-empty"><span>▣</span><strong>Belum ada dokumen dibuka</strong><p>Pilih materi dari daftar Class untuk melihatnya di sini.</p></div>'; });
   document.querySelectorAll('.content-tab').forEach((tab) => tab.addEventListener('click', () => { document.querySelectorAll('.content-tab').forEach((entry) => entry.classList.remove('active')); tab.classList.add('active'); renderClassItems(tab.dataset.contentTab); }));
   $('#openSidebar').addEventListener('click', () => sidebar.classList.add('open')); $('#closeSidebar').addEventListener('click', () => sidebar.classList.remove('open')); document.addEventListener('keydown', (event) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); $('#newChat').click(); } if (event.key === 'Escape') sidebar.classList.remove('open'); });
   profileMenuToggle.addEventListener('click', (event) => { event.stopPropagation(); const open = profileMenu.classList.toggle('show'); profileMenuToggle.setAttribute('aria-expanded', String(open)); profileMenu.setAttribute('aria-hidden', String(!open)); }); profileLogout.addEventListener('click', logout); authAction.addEventListener('click', (event) => { if (currentUser) { event.preventDefault(); logout(); } }); window.addEventListener('click', (event) => { if (!event.target.closest('.mini-profile')) profileMenu.classList.remove('show'); document.querySelectorAll('.popup-menu.show').forEach((menu) => menu.classList.remove('show')); });
   document.querySelectorAll('.quick-actions button').forEach((button) => button.addEventListener('click', () => sendMessage(button.dataset.prompt || button.textContent)));
   document.querySelectorAll('[data-route]').forEach((link) => link.addEventListener('click', (event) => { if (link.dataset.route === 'chat') return; event.preventDefault(); showToast(`${link.textContent.trim()} akan tersedia setelah datanya terhubung.`); }));
 
-  renderAll(); renderMessages();
-  getCurrentUser().then((user) => { currentUser = user; updateAuthUI(user); });
+  renderAll();
+  getCurrentUser().then(async (user) => {
+    currentUser = user;
+    updateAuthUI(user);
+    await hydrateWorkspace(user);
+    messages.innerHTML = '<div class="message assistant"><div class="message-avatar">✦</div><div class="bubble"><p>Hai! Aku bisa membantu membuat dan mengelola Class, membaca materi, serta berpindah ke bagian workspace yang kamu minta.</p><div class="quick-actions"><button data-prompt="Buatkan Class untuk materi kuliah saya">Buat Class</button><button data-prompt="Tampilkan isi Class yang sedang aktif">Lihat isi Class</button><button data-prompt="Bantu review materi ini">Review materi</button></div></div></div>';
+    renderAll();
+    renderMessages();
+    document.querySelectorAll('.quick-actions button').forEach((button) => button.addEventListener('click', () => sendMessage(button.dataset.prompt || button.textContent)));
+  });
 });
