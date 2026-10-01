@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const list = tab === 'documents' ? item.documents : tab === 'materials' ? item.materials : item.tasks;
     if (!list.length) { container.innerHTML = `<div class="content-empty">Belum ada ${tab === 'documents' ? 'dokumen' : tab === 'materials' ? 'materi' : 'tugas'} di Class ini.</div>`; return; }
     list.forEach((entry) => {
-      const sourceDoc = entry.sourceDocumentId ? item.documents.find((doc) => doc.id === entry.sourceDocumentId) : null;
+      const sourceDoc = tab === 'documents' ? entry : (entry.sourceDocumentId ? item.documents.find((doc) => doc.id === entry.sourceDocumentId) : null);
       const row = document.createElement('div'); row.className = 'class-content-item';
       const button = document.createElement('button'); button.type = 'button'; button.className = 'content-item-main';
       button.innerHTML = `<span class="content-item-icon">${sourceDoc?.kind || (tab === 'tasks' ? '✓' : '✦')}</span><span><strong></strong><small>${sourceDoc ? `${sourceDoc.kind} · ${formatBytes(sourceDoc.size)}` : tab === 'tasks' ? 'Tugas Class' : 'Catatan materi'}</small></span>`;
