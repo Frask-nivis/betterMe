@@ -67,8 +67,15 @@ document.addEventListener('DOMContentLoaded', () => {
     get(id) {
       return this.open().then((db) => new Promise((resolve) => {
         if (!db) return resolve(null);
-        const request = db.transaction('files', 'readonly').objectStore('files').get(scopedFileKey(id));
-        request.onsuccess = () => resolve(request.result?.file || null);
+        const store = db.transaction('files', 'readonly').objectStore('files');
+        const request = store.get(scopedFileKey(id));
+        request.onsuccess = () => {
+          if (request.result?.file) return resolve(request.result.file);
+          if (localStorage.getItem(`${STORAGE_KEY}.legacyOwner`) !== storageUserSub) return resolve(null);
+          const legacyRequest = store.get(id);
+          legacyRequest.onsuccess = () => { const file = legacyRequest.result?.file || null; if (file) this.save(id, file); resolve(file); };
+          legacyRequest.onerror = () => resolve(null);
+        };
         request.onerror = () => resolve(null);
       }));
     },
