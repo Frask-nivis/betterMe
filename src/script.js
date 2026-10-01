@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const MAX_TOTAL_BYTES = 30 * 1024 * 1024;
   const MAX_WIRE_BYTES = 3.8 * 1024 * 1024;
   const colors = ['#7167f7', '#ff7c70', '#40c99a', '#5d9cf7', '#a884f7'];
+  const AGENT_ACTIONS = ['create_class', 'open_class', 'rename_class', 'delete_class', 'add_material', 'add_task', 'delete_document', 'focus_document', 'navigate'];
 
   const $ = (selector) => document.querySelector(selector);
   const messages = $('#messages');
@@ -224,11 +225,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const sendChatMessage = async (userMessage, attachments, context) => {
     const prepared = []; let wireBytes = 0;
     for (const file of attachments) { const optimized = await compressImage(file); const uploadFile = optimized === file ? await gzipBlob(file) : optimized; wireBytes += uploadFile.size; if (wireBytes > MAX_WIRE_BYTES) throw new Error('Attachment masih terlalu besar setelah kompresi. Coba kirim lebih sedikit file.'); prepared.push(uploadFile); }
-    const data = new FormData(); data.append('message', userMessage); data.append('context', JSON.stringify(context)); data.append('pageContext', context.currentPage); data.append('classContext', context.activeClass ? JSON.stringify(context.activeClass) : ''); data.append('documentContext', context.activeDocument ? JSON.stringify(context.activeDocument) : ''); prepared.forEach((file) => data.append('attachments', file, file.name));
+    const data = new FormData(); data.append('message', userMessage); data.append('context', JSON.stringify(context)); data.append('pageContext', context.currentPage); data.append('classContext', context.activeClass ? JSON.stringify(context.activeClass) : ''); data.append('documentContext', context.activeDocument ? JSON.stringify(context.activeDocument) : ''); data.append('agentActions', JSON.stringify(AGENT_ACTIONS)); prepared.forEach((file) => data.append('attachments', file, file.name));
     const response = await fetch(`${BACKEND_URL}/api/ai/chat`, { method: 'POST', credentials: 'include', body: data });
     if (response.status === 401) { window.location.href = 'login.html'; return null; }
     if (!response.ok) throw new Error(`AI tidak tersedia (HTTP ${response.status}).`);
-    const result = await response.json(); return result.response || result.error || 'Maaf, AI tidak mengembalikan jawaban.';
+    const result = await response.json(); return { text: result.response || result.error || 'Maaf, AI tidak mengembalikan jawaban.', actions: Array.isArray(result.agentActions) ? result.agentActions : Array.isArray(result.actions) ? result.actions : [] };
+  };
+
+  const applyAgentActions = (actions) => {
+    const notices = [];
+    for (const action of Array.isArray(actions) ? actions : []) {
+      if (!action || !AGENT_ACTIONS.includes(action.type)) continue;
+      let item = action.classId ? state.classes.find((entry) => entry.id === action.classId) : currentClass();
+      if (action.type === 'create_class' && action.name) { item = createClass(action.name, { description: action.description }); notices.push(`Class “${item.name}” dibuat.`); }
+      if (action.type === 'open_class') { const target = state.classes.find((entry) => entry.id === action.classId || entry.name.toLowerCase().includes(String(action.name || '').toLowerCase())); if (target) { navigateToClass(target.id); item = target; notices.push(`Membuka Class “${target.name}”.`); } }
+      if (action.type === 'rename_class' && item && action.name) { item.name = String(action.name).trim(); persist(); renderAll(); notices.push(`Nama Class diubah menjadi “${item.name}”.`); }
+      if (action.type === 'delete_class' && item) { const name = item.name; state.classes = state.classes.filter((entry) => entry.id !== item.id); state.currentClassId = state.classes[0]?.id || null; persist(); renderAll(); notices.push(`Class “${name}” dihapus.`); }
+      if (action.type === 'add_material' && item && action.title) { item.materials.push({ id: uid('material'), title: String(action.title), createdAt: new Date().toISOString() }); persist(); renderAll(); notices.push(`Materi ditambahkan ke “${item.name}”.`); }
+      if (action.type === 'add_task' && item && action.title) { item.tasks.push({ id: uid('task'), title: String(action.title), createdAt: new Date().toISOString() }); persist(); renderAll(); notices.push(`Tugas ditambahkan ke “${item.name}”.`); }
+      if (action.type === 'delete_document' && item && action.documentId) { const target = item.documents.find((doc) => doc.id === action.documentId); if (target) { removeDocument(item, target.id); notices.push(`Dokumen “${target.name}” dihapus.`); } }
+      if (action.type === 'focus_document' && item && action.documentId) { navigateToClass(item.id, false); openDocument(action.documentId); notices.push('Dokumen dibuka di viewer.'); }
+      if (action.type === 'navigate' && action.route === 'global-workspace') { state.currentClassId = null; persist(); renderAll(); notices.push('Kembali ke Global chat.'); }
+    }
+    return notices;
   };
 
   const applyLocalIntent = (text) => {
@@ -262,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const actionMessage = localActions.length ? addMessage(localActions.join(' '), 'assistant') : null;
     hint.textContent = attachments.length ? 'Mengecilkan attachment lalu membaca...' : 'Glint sedang berpikir...';
     const loading = addMessage('Sedang membaca konteks workspace…', 'assistant');
-    try { const response = await sendChatMessage(cleanText || 'Analisis materi yang saya lampirkan.', attachments, getContext()); loading.querySelector('p').textContent = response || 'Silakan lanjutkan setelah login.'; }
+    try { const result = await sendChatMessage(cleanText || 'Analisis materi yang saya lampirkan.', attachments, getContext()); const agentNotices = applyAgentActions(result?.actions || []); loading.querySelector('p').textContent = [result?.text || 'Silakan lanjutkan setelah login.', ...agentNotices].join(' '); }
     catch (error) { loading.querySelector('p').textContent = error.message || 'Maaf, terjadi kesalahan saat menghubungkan ke AI.'; }
     hint.textContent = 'Tanya apa saja tentang workspace-mu...'; if (actionMessage) actionMessage.scrollIntoView({ block: 'nearest' });
   };
