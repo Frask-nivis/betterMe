@@ -37,6 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let pendingUploadClassId = null;
   let activeDocumentId = null;
   const runtimeFiles = new Map();
+  let storageUserSub = '';
+  let workspaceReady = false;
+  let remoteSaveTimer = null;
+  let remoteStorageWarningShown = false;
+  const scopedFileKey = (id) => `${storageUserSub || 'guest'}:${id}`;
   const fileStore = {
     dbPromise: null,
     open() {
@@ -54,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return this.open().then((db) => new Promise((resolve) => {
         if (!db) return resolve(false);
         const transaction = db.transaction('files', 'readwrite');
-        transaction.objectStore('files').put({ id, file });
+        transaction.objectStore('files').put({ id: scopedFileKey(id), file });
         transaction.oncomplete = () => resolve(true);
         transaction.onerror = () => resolve(false);
       }));
@@ -62,23 +67,69 @@ document.addEventListener('DOMContentLoaded', () => {
     get(id) {
       return this.open().then((db) => new Promise((resolve) => {
         if (!db) return resolve(null);
-        const request = db.transaction('files', 'readonly').objectStore('files').get(id);
+        const request = db.transaction('files', 'readonly').objectStore('files').get(scopedFileKey(id));
         request.onsuccess = () => resolve(request.result?.file || null);
         request.onerror = () => resolve(null);
       }));
     },
     remove(id) {
-      return this.open().then((db) => { if (db) db.transaction('files', 'readwrite').objectStore('files').delete(id); });
+      return this.open().then((db) => { if (db) db.transaction('files', 'readwrite').objectStore('files').delete(scopedFileKey(id)); });
     }
   };
 
   const defaultState = () => ({ classes: [], currentClassId: null, messages: [] });
-  let state;
-  try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState(); } catch (_) { state = defaultState(); }
-  state.classes = Array.isArray(state.classes) ? state.classes : [];
-  state.messages = Array.isArray(state.messages) ? state.messages : [];
+  let state = defaultState();
+  const localStateKey = () => storageUserSub ? `${STORAGE_KEY}:${storageUserSub}` : null;
+  const saveLocalState = () => { const key = localStateKey(); if (key) localStorage.setItem(key, JSON.stringify(state)); };
+  const scheduleRemoteSave = () => {
+    if (!workspaceReady || !storageUserSub) return;
+    clearTimeout(remoteSaveTimer);
+    remoteSaveTimer = setTimeout(async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/workspace`, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state }) });
+        if (!response.ok && !remoteStorageWarningShown) { remoteStorageWarningShown = true; showToast('Workspace tersimpan lokal; sinkronisasi server belum tersedia.'); }
+      } catch (_) { if (!remoteStorageWarningShown) { remoteStorageWarningShown = true; showToast('Workspace tersimpan lokal; server belum dapat dijangkau.'); } }
+    }, 450);
+  };
+  const persist = () => { saveLocalState(); scheduleRemoteSave(); };
+  const normalizeState = (value) => { const source = value && typeof value === 'object' ? value : defaultState(); return { classes: Array.isArray(source.classes) ? source.classes : [], currentClassId: source.currentClassId || null, messages: Array.isArray(source.messages) ? source.messages.slice(-80) : [] }; };
+  const loadLocalState = (userSub) => {
+    storageUserSub = userSub || '';
+    if (!storageUserSub) { state = defaultState(); return; }
+    try {
+      const scoped = localStorage.getItem(localStateKey());
+      if (scoped) { state = normalizeState(JSON.parse(scoped)); return; }
+      const legacy = localStorage.getItem(STORAGE_KEY);
+      const legacyOwner = localStorage.getItem(`${STORAGE_KEY}.legacyOwner`);
+      if (legacy && (!legacyOwner || legacyOwner === storageUserSub)) {
+        state = normalizeState(JSON.parse(legacy));
+        saveLocalState();
+        localStorage.setItem(`${STORAGE_KEY}.legacyOwner`, storageUserSub);
+        return;
+      }
+    } catch (_) {}
+    state = defaultState();
+  };
 
-  const persist = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const hydrateWorkspace = async (user) => {
+    loadLocalState(user?.sub);
+    const localBeforeSync = normalizeState(state);
+    let shouldSeedRemote = false;
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/workspace`, { credentials: 'include' });
+      if (response.ok) {
+        const payload = await response.json();
+        if (payload.updated && payload.state) { state = normalizeState(payload.state); saveLocalState(); }
+        else if (!payload.updated && (localBeforeSync.classes.length || localBeforeSync.messages.length)) { state = localBeforeSync; shouldSeedRemote = true; }
+      } else if (response.status !== 503) {
+        throw new Error('workspace load failed');
+      }
+    } catch (_) {
+      if (!remoteStorageWarningShown) { remoteStorageWarningShown = true; showToast('Workspace server belum tersedia; memakai cache akun di browser.'); }
+    }
+    workspaceReady = true;
+    if (shouldSeedRemote) scheduleRemoteSave();
+  };
   const uid = (prefix) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   const escapeText = (value) => String(value || '').trim();
   const showToast = (message) => { toast.textContent = message; toast.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove('show'), 2600); };
@@ -334,6 +385,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.quick-actions button').forEach((button) => button.addEventListener('click', () => sendMessage(button.dataset.prompt || button.textContent)));
   document.querySelectorAll('[data-route]').forEach((link) => link.addEventListener('click', (event) => { if (link.dataset.route === 'chat') return; event.preventDefault(); showToast(`${link.textContent.trim()} akan tersedia setelah datanya terhubung.`); }));
 
-  renderAll(); renderMessages();
-  getCurrentUser().then((user) => { currentUser = user; updateAuthUI(user); });
+  renderAll();
+  getCurrentUser().then(async (user) => {
+    currentUser = user;
+    updateAuthUI(user);
+    await hydrateWorkspace(user);
+    messages.innerHTML = '<div class="message assistant"><div class="message-avatar">✦</div><div class="bubble"><p>Hai! Aku bisa membantu membuat dan mengelola Class, membaca materi, serta berpindah ke bagian workspace yang kamu minta.</p><div class="quick-actions"><button data-prompt="Buatkan Class untuk materi kuliah saya">Buat Class</button><button data-prompt="Tampilkan isi Class yang sedang aktif">Lihat isi Class</button><button data-prompt="Bantu review materi ini">Review materi</button></div></div></div>';
+    renderAll();
+    renderMessages();
+    document.querySelectorAll('.quick-actions button').forEach((button) => button.addEventListener('click', () => sendMessage(button.dataset.prompt || button.textContent)));
+  });
 });
